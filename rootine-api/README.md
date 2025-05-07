@@ -40,8 +40,8 @@ The **Smart Routine App API** is the backend for a dynamic routine and task mana
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/smart-routine-api.git
-   cd smart-routine-api
+   git clone https://github.com/ch-ezey/rootine/tree/master/rootine-api
+   cd rootine-api
    ```
 
 2. **Set up the database**
