@@ -36,6 +36,8 @@ public class AuthController {
                 )
         );
 
+//        User user = userService.login(request);
+
         String token = jwtService.generateToken(authentication);
         return ResponseEntity.ok(new AuthResponse(token));
     }
@@ -43,6 +45,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody User user) {
         User savedUser = userService.registerUser(user);
+
         String token = jwtService.generateToken(savedUser);
         return ResponseEntity.ok(new AuthResponse(token));
     }

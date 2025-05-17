@@ -40,7 +40,7 @@ public class Routine {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "detail_level")
-    private DetailLevel detailLevel = DetailLevel.medium;
+    private DetailLevel detailLevel = DetailLevel.MEDIUM;
 
     @Column(name = "is_active")
     private Boolean isActive = false;

@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -33,6 +34,11 @@ public class UserServiceImpl implements UserService{
     public User getUserByEmail(String email) {
         return userRepo.findByEmail(email);
     }
+
+//    @Override
+//    public User getUserByUUID(UUID uuid) {
+//        return userRepo.findByUuid(uuid);
+//    }/
 
     @Override
     public void addUser(User user) {
