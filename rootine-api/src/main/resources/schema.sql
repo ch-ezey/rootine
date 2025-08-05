@@ -2,9 +2,10 @@ DROP DATABASE IF EXISTS rootine;
 CREATE DATABASE rootine;
 USE rootine;
 
--- USER TABLE
+-- USER TABLE (Updated with UUID)
 CREATE TABLE user (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid CHAR(36) NOT NULL UNIQUE DEFAULT (UUID()), -- New UUID column
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -12,27 +13,30 @@ CREATE TABLE user (
     last_login TIMESTAMP NULL
 );
 
+
 -- ROUTINE TABLE
 CREATE TABLE routine (
     routine_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
     theme VARCHAR(50), -- e.g., fitness, work, general
-    detail_level ENUM('low', 'medium', 'high') DEFAULT 'medium',
+    detail_level ENUM('LOW', 'MEDIUM', 'HIGH') DEFAULT 'MEDIUM',
     is_active BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
+
+
 
 -- TASK TABLE
 CREATE TABLE task (
     task_id INT AUTO_INCREMENT PRIMARY KEY,
     routine_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
-    task_type ENUM('routine', 'one-time', 'event') DEFAULT 'one-time',
+    task_type ENUM('ROUTINE', 'ONE_TIME', 'EVENT') DEFAULT 'ONE_TIME',
     start_time TIMESTAMP NULL,
-    duration INT, 
-    priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+    duration INT,
+    priority ENUM('LOW', 'MEDIUM', 'HIGH') DEFAULT 'MEDIUM',
     is_completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (routine_id) REFERENCES routine(routine_id) ON DELETE CASCADE

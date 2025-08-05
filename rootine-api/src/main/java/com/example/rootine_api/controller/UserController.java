@@ -2,6 +2,7 @@ package com.example.rootine_api.controller;
 
 import com.example.rootine_api.model.User;
 import com.example.rootine_api.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,11 +31,15 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-//    @GetMapping("/uuid/{uuid}")
-//    public ResponseEntity<User> getUserByUUID(@PathVariable UUID uuid) {
-//        User user = userService.getUserByUUID(uuid);
-//        return ResponseEntity.ok(user);
-//    }
+    @GetMapping("/uuid/{uuid}")
+    public ResponseEntity<User> getUserByUUID(@PathVariable UUID uuid) {
+        try {
+            User user = userService.getUserByUUID(uuid);
+            return ResponseEntity.ok(user);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @GetMapping("/email/{email}")
     public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
@@ -58,15 +63,5 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<User> login(@RequestBody User loginRequest) {
-        try {
-            User user = userService.login(loginRequest);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
     }
 }

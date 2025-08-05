@@ -35,10 +35,11 @@ public class UserServiceImpl implements UserService{
         return userRepo.findByEmail(email);
     }
 
-//    @Override
-//    public User getUserByUUID(UUID uuid) {
-//        return userRepo.findByUuid(uuid);
-//    }/
+    @Override
+    public User getUserByUUID(UUID uuid) {
+        return userRepo.findByUuid(uuid)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with UUID: " + uuid));
+    }
 
     @Override
     public void addUser(User user) {

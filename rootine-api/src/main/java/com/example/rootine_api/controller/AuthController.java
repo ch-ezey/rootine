@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,25 +29,36 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> authenticate(@RequestBody User request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+    public ResponseEntity<?> authenticate(@RequestBody User request) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
 
-//        User user = userService.login(request);
-
-        String token = jwtService.generateToken(authentication);
-        return ResponseEntity.ok(new AuthResponse(token));
+            String token = jwtService.generateToken(authentication);
+            return ResponseEntity.ok(new AuthResponse(token));
+        } catch (AuthenticationException ex) {
+            return ResponseEntity
+                    .status(401)
+                    .body("Invalid email or password.");
+        }
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody User user) {
-        User savedUser = userService.registerUser(user);
 
-        String token = jwtService.generateToken(savedUser);
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody User user) {
+        try {
+            User savedUser = userService.registerUser(user);
+            String token = jwtService.generateToken(savedUser);
+
         return ResponseEntity.ok(new AuthResponse(token));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(400)
+                    .body("Registration failed: " + e.getMessage());
+        }
     }
 }

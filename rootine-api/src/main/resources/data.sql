@@ -1,8 +1,9 @@
 -- USERS
-INSERT INTO user (name, email, password_hash) VALUES
-('Alice Smith', 'alice@example.com', 'hashed_password1'),
-('Bob Johnson', 'bob@example.com', 'hashed_password2'),
-('Charlie Zen', 'charlie@example.com', 'hashed_password3');
+INSERT INTO user (uuid, name, email, password_hash) VALUES
+('35353065-3834-3030-2d65-3239622d3431', 'Alice Smith', 'alice@example.com', 'hashed_password1'),
+('550e8400-e39b-41d4-a716-222114230001', 'Bob Johnson', 'bob@example.com', 'hashed_password2'),
+('550e8400-e29b-41d4-a716-446655440002', 'Charlie Zen', 'charlie@example.com', 'hashed_password3');
+
 
 -- ROUTINES
 INSERT INTO routine (user_id, title, theme, detail_level, is_active) VALUES
@@ -15,24 +16,24 @@ INSERT INTO routine (user_id, title, theme, detail_level, is_active) VALUES
 -- Workday Productivity (routine_id = 1)
 INSERT INTO task (routine_id, title, task_type, start_time, duration, priority) VALUES
 (1, 'Wake Up & Stretch', 'routine', '2025-04-10 08:00:00', 15, 'medium'),
-(1, 'Morning Shower', 'one-time', '2025-04-10 08:15:00', 15, 'low'),
-(1, 'Breakfast', 'one-time', '2025-04-10 08:30:00', 30, 'medium'),
+(1, 'Morning Shower', 'one_time', '2025-04-10 08:15:00', 15, 'low'),
+(1, 'Breakfast', 'one_time', '2025-04-10 08:30:00', 30, 'medium'),
 (1, 'Check Emails', 'routine', '2025-04-10 09:00:00', 20, 'high'),
-(1, 'Task Planning', 'one-time', '2025-04-10 09:30:00', 15, 'medium'),
+(1, 'Task Planning', 'one_time', '2025-04-10 09:30:00', 15, 'medium'),
 (1, 'Team Standup Call', 'routine', '2025-04-10 10:00:00', 30, 'high'),
 (1, 'Focus Work Block', 'routine', '2025-04-10 10:30:00', 90, 'high'),
-(1, 'Lunch Break', 'one-time', '2025-04-10 12:00:00', 60, 'medium'),
+(1, 'Lunch Break', 'one_time', '2025-04-10 12:00:00', 60, 'medium'),
 (1, 'Practice Algorithms', 'routine', '2025-04-10 13:00:00', 90, 'high'),
-(1, 'Break / Coffee Walk', 'one-time', '2025-04-10 14:30:00', 15, 'low'),
+(1, 'Break / Coffee Walk', 'one_time', '2025-04-10 14:30:00', 15, 'low'),
 (1, 'Doctor Appointment', 'event', '2025-04-10 15:00:00', 60, 'medium'),
-(1, 'Wrap-Up Tasks & Notes', 'one-time', '2025-04-10 16:00:00', 30, 'medium');
+(1, 'Wrap-Up Tasks & Notes', 'one_time', '2025-04-10 16:00:00', 30, 'medium');
 
 -- Morning Fitness (routine_id = 2)
 INSERT INTO task (routine_id, title, task_type, start_time, duration, priority) VALUES
 (2, 'Wake Up & Stretch', 'routine', '2025-04-10 06:00:00', 15, 'medium'),
 (2, 'Cardio Workout', 'routine', '2025-04-10 06:30:00', 45, 'high'),
-(2, 'Shower & Recovery', 'one-time', '2025-04-10 07:30:00', 30, 'low'),
-(2, 'Healthy Breakfast', 'one-time', '2025-04-10 08:00:00', 30, 'medium'),
+(2, 'Shower & Recovery', 'one_time', '2025-04-10 07:30:00', 30, 'low'),
+(2, 'Healthy Breakfast', 'one_time', '2025-04-10 08:00:00', 30, 'medium'),
 (2, 'Strength Training', 'routine', '2025-04-10 08:30:00', 60, 'high'),
 (2, 'Cool Down & Stretch', 'routine', '2025-04-10 09:30:00', 15, 'low');
 
@@ -40,9 +41,9 @@ INSERT INTO task (routine_id, title, task_type, start_time, duration, priority) 
 INSERT INTO task (routine_id, title, task_type, start_time, duration, priority) VALUES
 (3, 'Sleep In', 'routine', NULL, 90, 'low'),
 (3, 'Morning Yoga', 'routine', '2025-04-10 09:30:00', 30, 'low'),
-(3, 'Bubble Bath', 'one-time', '2025-04-10 10:30:00', 60, 'medium'),
+(3, 'Bubble Bath', 'one_time', '2025-04-10 10:30:00', 60, 'medium'),
 (3, 'Read a Book', 'routine', '2025-04-10 12:00:00', 60, 'low'),
-(3, 'Spa Face Mask', 'one-time', '2025-04-10 14:00:00', 30, 'medium'),
+(3, 'Spa Face Mask', 'one_time', '2025-04-10 14:00:00', 30, 'medium'),
 (3, 'Meditation', 'routine', '2025-04-10 15:00:00', 20, 'low'),
 (3, 'Journal', 'routine', '2025-04-10 16:00:00', 20, 'low');
 
@@ -51,10 +52,10 @@ INSERT INTO task (routine_id, title, task_type, start_time, duration, priority) 
 (4, 'Wake Up & Stretch', 'routine', '2025-04-10 07:00:00', 15, 'medium'),
 (4, 'Review Java Basics', 'routine', '2025-04-10 08:00:00', 60, 'high'),
 (4, 'Practice Algorithms', 'routine', '2025-04-10 09:00:00', 90, 'high'),
-(4, 'Lunch Break', 'one-time', '2025-04-10 12:00:00', 60, 'medium'),
+(4, 'Lunch Break', 'one_time', '2025-04-10 12:00:00', 60, 'medium'),
 (4, 'Complete Project Task', 'routine', '2025-04-10 13:00:00', 90, 'high'),
-(4, 'Break', 'one-time', '2025-04-10 15:00:00', 15, 'low'),
-(4, 'Review Progress', 'one-time', '2025-04-10 16:00:00', 30, 'medium');
+(4, 'Break', 'one_time', '2025-04-10 15:00:00', 15, 'low'),
+(4, 'Review Progress', 'one_time', '2025-04-10 16:00:00', 30, 'medium');
 
 -- TASK NOTES
 INSERT INTO task_note (task_id, note) VALUES
