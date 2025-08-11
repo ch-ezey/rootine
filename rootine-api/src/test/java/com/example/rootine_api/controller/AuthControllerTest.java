@@ -115,4 +115,19 @@ class AuthControllerTest {
                 .andExpect(content().string("Registration failed: User Already Exists"));
     }
 
+//    @Test
+//    void register_shouldReturnBadRequest_whenMissingFields() throws Exception {
+//        // Missing password
+//        mockMvc.perform(post("/auth/register")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content("{\"email\":\"user@example.com\"}"))
+//                .andExpect(status().isBadRequest());
+//
+//        // Missing email
+//        mockMvc.perform(post("/auth/register")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content("{\"password\":\"password123\"}"))
+//                .andExpect(status().isBadRequest());
+//    }
+//
 }

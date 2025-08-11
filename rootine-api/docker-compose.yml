@@ -1,0 +1,40 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: Cheta1223!
+      MYSQL_DATABASE: rootine
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  spring-app:
+    build: .
+    container_name: spring-app
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/rootine?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Cheta123!
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    # Use command with wait-for-it script or dockerize if you want extra safety to wait for mysql port (optional)
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
