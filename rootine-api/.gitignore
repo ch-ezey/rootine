@@ -31,3 +31,17 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environment Files ###
+.env
+*.env
+.env.local
+.env.development
+.env.test
+.env.production
+**/application-local.properties
+**/application-local.yml
+
+### OpenAI ###
+**/*openai*.properties
+**/*openai*.yml
