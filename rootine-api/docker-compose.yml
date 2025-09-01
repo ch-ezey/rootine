@@ -3,10 +3,10 @@ services:
     image: mysql:8.0
     container_name: mysql-db
     environment:
-      MYSQL_ROOT_PASSWORD: Cheta1223!
+      MYSQL_ROOT_PASSWORD: Cheta123!
       MYSQL_DATABASE: rootine
     ports:
-      - "3306:3306"
+      - "3305:3306"
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       interval: 10s
@@ -24,9 +24,10 @@ services:
       mysql-db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/rootine?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/rootine?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&autoReconnect=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: Cheta123!
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "8080:8080"
     networks:
