@@ -27,7 +27,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/rootine?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&autoReconnect=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: Cheta123!
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+#      OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "8080:8080"
     networks:
