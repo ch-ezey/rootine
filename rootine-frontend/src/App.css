@@ -1,42 +1,139 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* ---------------------------
+   Base Reset & Typography
+---------------------------- */
+body {
+	font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
+	padding: 0;
+	background: #f9f9f9;
+	color: #333;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+h1,
+h2 {
+	margin-bottom: 0.5rem;
+	color: #222;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+a {
+	text-decoration: none;
+	color: #0077cc;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+a:hover {
+	text-decoration: underline;
 }
 
-.card {
-  padding: 2em;
+ul {
+	list-style: none;
+	padding: 0;
 }
 
-.read-the-docs {
-  color: #888;
+li {
+	background: white;
+	margin: 0.5rem 0;
+	padding: 0.8rem;
+	border-radius: 6px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ---------------------------
+   Forms & Inputs
+---------------------------- */
+input,
+textarea,
+button {
+	margin: 0.5rem 0;
+	padding: 0.6rem;
+	font-size: 1rem;
+	width: 100%;
+	max-width: 400px;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	box-sizing: border-box;
+}
+
+textarea {
+	resize: vertical;
+	min-height: 80px;
+}
+
+button {
+	background: #0077cc;
+	color: white;
+	border: none;
+	cursor: pointer;
+	transition: background 0.2s ease-in-out;
+}
+
+button:hover {
+	background: #005fa3;
+}
+
+/* ---------------------------
+   Containers & Pages
+---------------------------- */
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 1.5rem;
+}
+
+.page {
+	max-width: 700px;
+	margin: 2rem auto;
+	padding: 2rem;
+	background: white;
+	border-radius: 10px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* ---------------------------
+   Login Page
+---------------------------- */
+.login-page {
+	max-width: 400px;
+	margin: 5rem auto;
+	padding: 2rem;
+	background: white;
+	border-radius: 10px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+	text-align: center;
+}
+
+/* ---------------------------
+   Dashboard Page
+---------------------------- */
+.dashboard-page {
+	margin: auto;
+	padding: 20px;
+}
+
+.dashboard-page h1 {
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+.dashboard-section {
+	margin-bottom: 30px;
+	padding: 15px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	background: #fff;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+}
+
+/* ---------------------------
+   Components
+---------------------------- */
+.ai-preview {
+	margin-top: 15px;
+	padding: 10px;
+	background: #f4f4f4;
+	border-radius: 6px;
+	font-family: monospace;
+	white-space: pre-wrap;
 }
