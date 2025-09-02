@@ -49,6 +49,12 @@ public class User implements UserDetails {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+    public User(String email, String password, String name) {
+        this.email = email;
+        this.password = password;
+        this.name = name;
+    }
+
 //    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

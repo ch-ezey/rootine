@@ -18,6 +18,4 @@ public interface UserService {
     void deleteUser(Integer id);
 
     User registerUser(User registerRequest);
-    User login(User loginRequest);
-    User logout(User user);
 }

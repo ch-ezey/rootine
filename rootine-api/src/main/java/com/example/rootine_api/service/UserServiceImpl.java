@@ -1,8 +1,9 @@
 package com.example.rootine_api.service;
 
+import com.example.rootine_api.exception.UserAlreadyExistsException;
+import com.example.rootine_api.exception.UserNotFoundException;
 import com.example.rootine_api.model.User;
 import com.example.rootine_api.repository.UserRepo;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepo userRepo;
@@ -27,29 +28,38 @@ public class UserServiceImpl implements UserService{
     @Override
     public User getUserById(Integer id) {
         return userRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id)) ;
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
     }
 
     @Override
     public User getUserByEmail(String email) {
-        return userRepo.findByEmail(email);
+        User user = userRepo.findByEmail(email);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with email: " + email);
+        }
+        return user;
     }
 
     @Override
     public User getUserByUUID(UUID uuid) {
         return userRepo.findByUuid(uuid)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with UUID: " + uuid));
+                .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + uuid));
     }
 
     @Override
     public void addUser(User user) {
+        if (userRepo.findByEmail(user.getEmail()) != null) {
+            throw new UserAlreadyExistsException("User with email " + user.getEmail() + " already exists");
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setUuid(UUID.randomUUID());
         userRepo.save(user);
     }
 
     @Override
     public User updateUser(Integer id, User user) {
         if (!userRepo.existsById(id)) {
-            throw new EntityNotFoundException("User not found with id: " + id);
+            throw new UserNotFoundException("User not found with id: " + id);
         }
         user.setUserId(id);
         return userRepo.save(user);
@@ -58,38 +68,20 @@ public class UserServiceImpl implements UserService{
     @Override
     public void deleteUser(Integer id) {
         if (!userRepo.existsById(id)) {
-            throw new EntityNotFoundException("User not found with id: " + id);
+            throw new UserNotFoundException("User not found with id: " + id);
         }
         userRepo.deleteById(id);
     }
 
     @Override
     public User registerUser(User registerRequest) {
-        // Check if user already exists
         if (userRepo.findByEmail(registerRequest.getEmail()) != null) {
-            throw new RuntimeException("User already exists");
+            throw new UserAlreadyExistsException("User already exists with email: " + registerRequest.getEmail());
         }
 
-        // Encode password
         registerRequest.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        registerRequest.setUuid(UUID.randomUUID());
 
-        // Save user
         return userRepo.save(registerRequest);
-    }
-
-    @Override
-    public User login(User loginRequest) {
-        User user = userRepo.findByEmail(loginRequest.getEmail());
-        if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
-        }
-        return user;
-    }
-
-    @Override
-    public User logout(User user) {
-        // Invalidate the user's session or token here
-        // This is just a placeholder as the actual implementation depends on your authentication mechanism
-        return user;
     }
 }

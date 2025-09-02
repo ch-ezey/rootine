@@ -29,36 +29,32 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticate(@RequestBody User request) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
+    public ResponseEntity<AuthResponse> authenticate(@RequestBody User request) {
+        // Let AuthenticationManager handle validation (BadCredentialsException if invalid)
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
 
-            String token = jwtService.generateToken(authentication);
-            return ResponseEntity.ok(new AuthResponse(token));
-        } catch (AuthenticationException ex) {
-            return ResponseEntity
-                    .status(401)
-                    .body("Invalid email or password.");
-        }
+        // Generate JWT for authenticated user
+        String token = jwtService.generateToken(authentication);
+
+        return ResponseEntity.ok(new AuthResponse(token));
     }
 
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        try {
-            User savedUser = userService.registerUser(user);
-            String token = jwtService.generateToken(savedUser);
+    public ResponseEntity<AuthResponse> register(@RequestBody User user) {
+        // UserService throws RuntimeException if user already exists
+        User savedUser = userService.registerUser(user);
+
+        // Issue JWT immediately upon successful registration
+        String token = jwtService.generateToken(savedUser);
 
         return ResponseEntity.ok(new AuthResponse(token));
-        } catch (RuntimeException e) {
-            return ResponseEntity
-                    .status(400)
-                    .body("Registration failed: " + e.getMessage());
-        }
     }
+
+
 }
