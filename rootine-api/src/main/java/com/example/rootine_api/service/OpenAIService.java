@@ -1,4 +1,5 @@
 package com.example.rootine_api.service;
 
-public class OpenAIService {
+public interface OpenAIService {
+    String generateRoutine(String prompt);
 }

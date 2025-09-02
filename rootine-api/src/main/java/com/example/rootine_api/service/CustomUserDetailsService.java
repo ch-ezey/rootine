@@ -1,4 +1,4 @@
-package com.example.rootine_api.config;
+package com.example.rootine_api.service;
 
 import com.example.rootine_api.model.User;
 import com.example.rootine_api.repository.UserRepo;
@@ -20,7 +20,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
-                .password(user.getPasswordHash())
+                .password(user.getPassword())
                 .roles("USER")
                 .build();
     }

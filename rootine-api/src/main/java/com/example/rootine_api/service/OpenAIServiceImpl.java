@@ -1,7 +1,6 @@
 package com.example.rootine_api.service;
 
 import com.openai.client.OpenAIClient;
-import com.openai.core.JsonObject;
 import com.openai.models.ChatModel;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OpenAIService {
+public class OpenAIServiceImpl implements OpenAIService{
 
     private final OpenAIClient openAIClient;
 

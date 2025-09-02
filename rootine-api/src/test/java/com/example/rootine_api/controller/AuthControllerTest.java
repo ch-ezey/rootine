@@ -4,7 +4,6 @@ import com.example.rootine_api.model.User;
 import com.example.rootine_api.service.JwtService;
 import com.example.rootine_api.service.UserService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -84,7 +83,7 @@ class AuthControllerTest {
 
         User user = new User();
         user.setEmail(email);
-        user.setPasswordHash(password);
+        user.setPassword(password);
 
         Mockito.when(userService.registerUser(Mockito.any(User.class))).thenReturn(user);
         Mockito.when(jwtService.generateToken(user)).thenReturn(fakeToken);
@@ -103,7 +102,7 @@ class AuthControllerTest {
 
         User user = new User();
         user.setEmail(email);
-        user.setPasswordHash(password);
+        user.setPassword(password);
 
         Mockito.when(userService.registerUser(Mockito.any(User.class)))
                 .thenThrow(new RuntimeException("User Already Exists"));

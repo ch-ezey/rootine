@@ -71,7 +71,7 @@ public class UserServiceImpl implements UserService{
         }
 
         // Encode password
-        registerRequest.setPasswordHash(passwordEncoder.encode(registerRequest.getPasswordHash()));
+        registerRequest.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
         // Save user
         return userRepo.save(registerRequest);
@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public User login(User loginRequest) {
         User user = userRepo.findByEmail(loginRequest.getEmail());
-        if (user == null || !passwordEncoder.matches(loginRequest.getPasswordHash(), user.getPasswordHash())) {
+        if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
         return user;
