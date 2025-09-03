@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../AuthContext";
+import { loginUser, fetchMe } from "../api/auth";
 
 const Login = () => {
 	const [email, setEmail] = useState("");
@@ -9,45 +10,31 @@ const Login = () => {
 	const navigate = useNavigate();
 
 	const onLogin = async (email, password) => {
-		const res = await fetch("http://localhost:8080/auth/login", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ email, password }),
-		});
+		try {
+			const { token } = await loginUser(email, password);
 
-		if (!res.ok) {
-			throw new Error("Login failed");
+			// Save token
+			localStorage.setItem("token", token);
+
+			// Fetch user info
+			const userData = await fetchMe();
+
+			console.log("Login successful:", userData);
+
+			// Save session globally
+			login(userData, token);
+
+			// Redirect to dashboard
+			navigate("/dashboard");
+		} catch (err) {
+			alert("Login failed: " + err.message);
 		}
-
-		const data = await res.json();
-
-		// Fetch user info
-		const userRes = await fetch("http://localhost:8080/auth/me", {
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${data.token}`,
-			},
-		});
-
-		if (!userRes.ok) {
-			throw new Error("Failed to fetch user info");
-		}
-
-		const userData = await userRes.json();
-
-		console.log("Login successful:", userData);
-
-		// Save session globally
-		login(userData, data.token);
-
-		// Redirect to dashboard
-		navigate("/dashboard");
 	};
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
 		if (email.trim() && password.trim()) {
-			onLogin(email, password).catch((err) => alert(err.message));
+			onLogin(email, password);
 		}
 	};
 
@@ -70,6 +57,9 @@ const Login = () => {
 				/>
 				<button type='submit'>Login</button>
 			</form>
+			<p>
+				Don’t have an account? <Link to='/register'>Register here</Link>
+			</p>
 		</div>
 	);
 };

@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
+import { fetchMe } from "./api/auth"; // central API function
 
 export const AuthContext = createContext();
 
@@ -7,23 +8,27 @@ export const AuthProvider = ({ children }) => {
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		// Restore session from localStorage
-		const token = localStorage.getItem("token");
-		if (token) {
-			fetch("http://localhost:8080/auth/me", {
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
-			})
-				.then((res) => (res.ok ? res.json() : null))
-				.then((data) => {
-					if (data) setUser(data);
-				})
-				.finally(() => setLoading(false));
-		} else {
-			setLoading(false);
-		}
+		const restoreSession = async () => {
+			const token = localStorage.getItem("token");
+			console.log("Restoring session with token:", token);
+
+			if (!token) {
+				setLoading(false);
+				return;
+			}
+
+			try {
+				const data = await fetchMe(); // axios call with token automatically attached
+				setUser(data);
+			} catch (err) {
+				console.error("Session restore failed:", err.message);
+				localStorage.removeItem("token"); // clear bad token
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		restoreSession();
 	}, []);
 
 	const login = (userData, token) => {
