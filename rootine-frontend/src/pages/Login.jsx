@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { testAPI } from "../api/api";
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../AuthContext";
 
-const Login = ({ login }) => {
+const Login = () => {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const { login } = useContext(AuthContext);
+	const navigate = useNavigate();
 
 	const onLogin = async (email, password) => {
 		const res = await fetch("http://localhost:8080/auth/login", {
@@ -15,25 +18,36 @@ const Login = ({ login }) => {
 		if (!res.ok) {
 			throw new Error("Login failed");
 		}
+
 		const data = await res.json();
 
-		console.log("Login successful, token:", data.token);
-		localStorage.setItem("token", data.token);
+		// Fetch user info
+		const userRes = await fetch("http://localhost:8080/auth/me", {
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${data.token}`,
+			},
+		});
+
+		if (!userRes.ok) {
+			throw new Error("Failed to fetch user info");
+		}
+
+		const userData = await userRes.json();
+
+		console.log("Login successful:", userData);
+
+		// Save session globally
+		login(userData, data.token);
+
+		// Redirect to dashboard
+		navigate("/dashboard");
 	};
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		if (email.trim()) {
-			onLogin(email, password);
-		}
-	};
-
-	const handleTestAPI = async () => {
-		try {
-			const result = await testAPI();
-			alert("API connection successful!");
-		} catch (error) {
-			alert("API connection failed. Check console for details.");
+		if (email.trim() && password.trim()) {
+			onLogin(email, password).catch((err) => alert(err.message));
 		}
 	};
 
@@ -49,13 +63,12 @@ const Login = ({ login }) => {
 				/>
 
 				<input
-					type='text'
+					type='password'
 					placeholder='Enter password'
 					value={password}
 					onChange={(e) => setPassword(e.target.value)}
 				/>
 				<button type='submit'>Login</button>
-				<button onClick={handleTestAPI}>Test API Connection</button>
 			</form>
 		</div>
 	);
