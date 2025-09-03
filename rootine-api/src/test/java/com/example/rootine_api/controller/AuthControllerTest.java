@@ -1,5 +1,6 @@
 package com.example.rootine_api.controller;
 
+import com.example.rootine_api.exception.UserAlreadyExistsException;
 import com.example.rootine_api.model.User;
 import com.example.rootine_api.service.JwtService;
 import com.example.rootine_api.service.UserService;
@@ -10,9 +11,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -55,7 +56,6 @@ class AuthControllerTest {
                         .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value(fakeToken));
-
     }
 
     @Test
@@ -63,17 +63,18 @@ class AuthControllerTest {
         String email = "bad@example.com";
         String password = "wrongpassword";
 
-        // Mock AuthenticationManager to throw AuthenticationException
+        // Mock AuthenticationManager to throw BadCredentialsException
         Mockito.when(authenticationManager.authenticate(Mockito.any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new AuthenticationException("Bad credentials") {});
+                .thenThrow(new BadCredentialsException("Bad credentials"));
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string("Invalid email or password."));
+                .andExpect(jsonPath("$.message").value("Invalid email or password"))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"));
     }
-
 
     @Test
     void register_shouldReturnToken_whenSuccessful() throws Exception {
@@ -100,33 +101,16 @@ class AuthControllerTest {
         String email = "new@example.com";
         String password = "password";
 
-        User user = new User();
-        user.setEmail(email);
-        user.setPassword(password);
-
+        // Throw custom exception
         Mockito.when(userService.registerUser(Mockito.any(User.class)))
-                .thenThrow(new RuntimeException("User Already Exists"));
+                .thenThrow(new UserAlreadyExistsException("User already exists"));
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Registration failed: User Already Exists"));
+                .andExpect(jsonPath("$.message").value("User already exists"))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"));
     }
-
-//    @Test
-//    void register_shouldReturnBadRequest_whenMissingFields() throws Exception {
-//        // Missing password
-//        mockMvc.perform(post("/auth/register")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content("{\"email\":\"user@example.com\"}"))
-//                .andExpect(status().isBadRequest());
-//
-//        // Missing email
-//        mockMvc.perform(post("/auth/register")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content("{\"password\":\"password123\"}"))
-//                .andExpect(status().isBadRequest());
-//    }
-//
 }

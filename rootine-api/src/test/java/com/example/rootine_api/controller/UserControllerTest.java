@@ -1,6 +1,7 @@
 package com.example.rootine_api.controller;
 
 import com.example.rootine_api.model.User;
+import com.example.rootine_api.service.JwtService;
 import com.example.rootine_api.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -26,6 +27,8 @@ class UserControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private JwtService jwtService;
 
     @Test
     void getAllUsers_shouldReturnOk() throws Exception {

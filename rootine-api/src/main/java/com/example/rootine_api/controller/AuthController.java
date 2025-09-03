@@ -7,12 +7,17 @@ import com.example.rootine_api.model.User;
 import com.example.rootine_api.service.JwtService;
 import com.example.rootine_api.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -55,6 +60,24 @@ public class AuthController {
 
         return ResponseEntity.ok(new AuthResponse(token));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        String email = authentication.getName(); // from UserDetails
+        User user = userService.getUserByEmail(email);
+
+        // return only safe fields (no password!)
+        return ResponseEntity.ok(Map.of(
+                "id", user.getUserId(),
+                "email", user.getEmail(),
+                "name", user.getName()
+        ));
+    }
+
 
 
 }
