@@ -26,8 +26,13 @@ public class RoutineServiceImpl implements RoutineService{
     }
 
     @Override
-    public void addRoutine(Routine routine) {
-        routineRepo.save(routine);
+    public List<Routine> getRoutinesByUserId(Integer userId) {
+        return routineRepo.findByUserUserId(userId);
+    }
+
+    @Override
+    public Routine addRoutine(Routine routine) {
+        return routineRepo.save(routine);
     }
 
     @Override

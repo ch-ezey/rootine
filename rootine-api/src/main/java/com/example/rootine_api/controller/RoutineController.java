@@ -1,12 +1,15 @@
 package com.example.rootine_api.controller;
 
 import com.example.rootine_api.model.Routine;
+import com.example.rootine_api.model.User;
 import com.example.rootine_api.service.RoutineService;
+import com.example.rootine_api.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -16,6 +19,9 @@ public class RoutineController {
 
     @Autowired
     private RoutineService routineService;
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/routines")
     public ResponseEntity<List<Routine>> getAllRoutines() {
@@ -29,10 +35,20 @@ public class RoutineController {
         return ResponseEntity.ok(routine);
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Routine>> getRoutinesByUserId(@PathVariable Integer userId) {
+        List<Routine> routines = routineService.getRoutinesByUserId(userId);
+        return ResponseEntity.ok(routines);
+    }
+
     @PostMapping
-    public ResponseEntity<Void> addRoutine(@RequestBody Routine routine) {
-        routineService.addRoutine(routine);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<Routine> addRoutine(@RequestBody Routine routine, Principal principal) {
+        User user = userService.getUserByEmail(principal.getName());
+
+        routine.setUser(user);
+        Routine savedRoutine = routineService.addRoutine(routine);
+        
+        return ResponseEntity.ok(savedRoutine);
     }
 
     @PutMapping("/{id}")

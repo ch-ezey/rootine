@@ -7,7 +7,8 @@ import java.util.List;
 public interface RoutineService {
     List<Routine> getAllRoutines();
     Routine getRoutineById(Integer id);
-    void addRoutine(Routine routine);
+    List<Routine> getRoutinesByUserId(Integer userId);
+    Routine addRoutine(Routine routine);
     Routine updateRoutine(Integer id, Routine routine);
     void deleteRoutine(Integer id);
 }

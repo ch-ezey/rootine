@@ -1,10 +1,8 @@
 package com.example.rootine_api.service;
 
-import com.example.rootine_api.model.Routine;
 import com.example.rootine_api.model.User;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface UserService {
@@ -18,4 +16,7 @@ public interface UserService {
     void deleteUser(Integer id);
 
     User registerUser(User registerRequest);
+
+    void updateLastLogin(Integer id);
+    void updateLastLogin(String email);
 }

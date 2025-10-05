@@ -1,6 +1,5 @@
 package com.example.rootine_api.controller;
 
-import com.example.rootine_api.dto.AuthRequest;
 import com.example.rootine_api.dto.AuthResponse;
 
 import com.example.rootine_api.model.User;
@@ -12,9 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -34,8 +30,7 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> authenticate(@RequestBody User request) {
-        // Let AuthenticationManager handle validation (BadCredentialsException if invalid)
+    public ResponseEntity<Map<String, Object>> authenticate(@RequestBody User request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -43,22 +38,43 @@ public class AuthController {
                 )
         );
 
-        // Generate JWT for authenticated user
         String token = jwtService.generateToken(authentication);
 
-        return ResponseEntity.ok(new AuthResponse(token));
+        User user = userService.getUserByEmail(request.getEmail());
+
+        Map<String, Object> response = Map.of(
+                "token", token,
+                "user", Map.of(
+                        "id", user.getUserId(),
+                        "name", user.getName(),
+                        "email", user.getEmail()
+                )
+        );
+
+        userService.updateLastLogin(request.getEmail());
+
+        return ResponseEntity.ok(response);
     }
 
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody User user) {
+    public ResponseEntity<Map<String, Object>> register(@RequestBody User user) {
         // UserService throws RuntimeException if user already exists
         User savedUser = userService.registerUser(user);
 
         // Issue JWT immediately upon successful registration
         String token = jwtService.generateToken(savedUser);
 
-        return ResponseEntity.ok(new AuthResponse(token));
+        Map<String, Object> response = Map.of(
+                "token", token,
+                "user", Map.of(
+                        "id", user.getUserId(),
+                        "name", user.getName(),
+                        "email", user.getEmail()
+                )
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")
@@ -70,14 +86,12 @@ public class AuthController {
         String email = authentication.getName(); // from UserDetails
         User user = userService.getUserByEmail(email);
 
-        // return only safe fields (no password!)
         return ResponseEntity.ok(Map.of(
                 "id", user.getUserId(),
                 "email", user.getEmail(),
-                "name", user.getName()
+                "name", user.getName(),
+                "lastLogin", user.getLastLogin()
         ));
     }
-
-
 
 }

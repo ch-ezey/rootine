@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -84,4 +85,26 @@ public class UserServiceImpl implements UserService {
 
         return userRepo.save(registerRequest);
     }
+
+    @Override
+    public void updateLastLogin(Integer id) {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+
+        user.setLastLogin(LocalDateTime.now());
+        userRepo.save(user);
+    }
+
+    @Override
+    public void updateLastLogin(String email) {
+        User user = userRepo.findByEmail(email);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with email: " + email);
+        }
+
+        user.setLastLogin(LocalDateTime.now());
+        userRepo.save(user);
+    }
+
+
 }

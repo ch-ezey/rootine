@@ -1,6 +1,8 @@
 package com.example.rootine_api.controller;
 
+import com.example.rootine_api.model.Routine;
 import com.example.rootine_api.model.Task;
+import com.example.rootine_api.service.RoutineService;
 import com.example.rootine_api.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,9 @@ public class TaskController {
 
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    private RoutineService routineService;
 
     @GetMapping("/tasks")
     public ResponseEntity<List<Task>> getAllTasks() {
@@ -36,9 +41,13 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> addTask(@RequestBody Task task) {
-        taskService.addTask(task);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+    public ResponseEntity<Task> addTask(@RequestBody Task task, @RequestParam Integer routineId) {
+        Routine routine = routineService.getRoutineById(routineId);
+
+        task.setRoutine(routine);
+        Task savedTask = taskService.addTask(task);
+
+        return ResponseEntity.ok(savedTask);
     }
 
     @PutMapping("/{id}")
