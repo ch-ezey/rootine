@@ -1,12 +1,33 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
+import { getRoutineByUserId } from "../api/routine";
 
 const Dashboard = () => {
 	const { user, loading, logout } = useContext(AuthContext);
 	const [routines, setRoutines] = useState([]);
 	const [newRoutine, setNewRoutine] = useState("");
+	const [fetching, setFetching] = useState(false);
 	const navigate = useNavigate();
+
+	// Fetch routines for the current user
+	useEffect(() => {
+		const fetchRoutines = async () => {
+			if (!user) return;
+			setFetching(true);
+			try {
+				const routinesData = await getRoutineByUserId(user.id); // returns JSON array
+				setRoutines(routinesData);
+				console.log("Fetched routines:", routinesData);
+			} catch (err) {
+				console.error("Error fetching routines:", err);
+			} finally {
+				setFetching(false);
+			}
+		};
+
+		fetchRoutines();
+	}, [user]);
 
 	const handleAddRoutine = () => {
 		if (newRoutine.trim()) {
@@ -49,8 +70,13 @@ const Dashboard = () => {
 
 					<ul>
 						{routines.map((routine, index) => (
-							<li key={index}>
-								{routine}
+							<li key={routine.routineId || index}>
+								<div>
+									<strong>{routine.title}</strong>
+									<p>Theme: {routine.theme}</p>
+									<p>Detail Level: {routine.detailLevel}</p>
+									<p>Status: {routine.isActive ? "Active" : "Inactive"}</p>
+								</div>
 								<button onClick={() => handleDeleteRoutine(index)}>
 									Delete
 								</button>

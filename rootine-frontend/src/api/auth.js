@@ -16,5 +16,5 @@ export const registerUser = async (name, email, password) => {
 // Fetch current user (session restore)
 export const fetchMe = async () => {
 	const res = await API.get("/auth/me");
-	return res.data; // expected { id, email, name, roles }
+	return res.data; // expected { id, email, name, lastLogin }
 };
