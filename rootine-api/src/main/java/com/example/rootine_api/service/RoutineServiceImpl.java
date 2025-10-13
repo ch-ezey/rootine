@@ -36,13 +36,31 @@ public class RoutineServiceImpl implements RoutineService{
     }
 
     @Override
-    public Routine updateRoutine(Integer id, Routine routine) {
-        if (!routineRepo.existsById(id)) {
-            throw new EntityNotFoundException("Routine not found with id: " + id);
+    public Routine updateRoutine(Integer id, Routine routineUpdates) {
+        Routine existingRoutine = routineRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Routine not found with id: " + id));
+
+        // Update only fields that are allowed to change
+        if (routineUpdates.getTitle() != null) {
+            existingRoutine.setTitle(routineUpdates.getTitle());
         }
-        routine.setRoutineId(id);
-        return routineRepo.save(routine);
+        if (routineUpdates.getTheme() != null) {
+            existingRoutine.setTheme(routineUpdates.getTheme());
+        }
+        if (routineUpdates.getDetailLevel() != null) {
+            existingRoutine.setDetailLevel(routineUpdates.getDetailLevel());
+        }
+        if (routineUpdates.getIsActive() != null) {
+            existingRoutine.setIsActive(routineUpdates.getIsActive());
+        }
+        if (routineUpdates.getCreatedAt() != null) {
+            existingRoutine.setCreatedAt(routineUpdates.getCreatedAt());
+        }
+
+        // Save and return updated entity
+        return routineRepo.save(existingRoutine);
     }
+
 
     @Override
     public void deleteRoutine(Integer id) {

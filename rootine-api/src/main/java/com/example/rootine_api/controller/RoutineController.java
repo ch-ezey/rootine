@@ -52,8 +52,8 @@ public class RoutineController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Routine> updateRoutine(@PathVariable Integer id, @RequestBody Routine routine) {
-        Routine updatedRoutine = routineService.updateRoutine(id, routine);
+    public ResponseEntity<Routine> updateRoutine(@PathVariable Integer id, @RequestBody Routine routineUpdates) {
+        Routine updatedRoutine = routineService.updateRoutine(id, routineUpdates);
         return ResponseEntity.ok(updatedRoutine);
     }
 

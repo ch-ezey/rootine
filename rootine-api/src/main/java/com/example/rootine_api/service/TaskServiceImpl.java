@@ -36,12 +36,31 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task updateTask(Integer id, Task task) {
-        if (!taskRepo.existsById(id)) {
-            throw new EntityNotFoundException("Task not found with id: " + id);
+    public Task updateTask(Integer id, Task taskUpdates) {
+        Task existingTask = taskRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Task not found with id: " + id));
+
+        // Update only fields that are allowed to change
+        if (taskUpdates.getTitle() != null) {
+            existingTask.setTitle(taskUpdates.getTitle());
         }
-        task.setTaskId(id);
-        return taskRepo.save(task);
+        if (taskUpdates.getTaskType() != null) {
+            existingTask.setTaskType(taskUpdates.getTaskType());
+        }
+        if (taskUpdates.getStartTime() != null) {
+            existingTask.setStartTime(taskUpdates.getStartTime());
+        }
+        if (taskUpdates.getDuration() != null) {
+            existingTask.setDuration(taskUpdates.getDuration());
+        }
+        if (taskUpdates.getPriority() != null) {
+            existingTask.setPriority(taskUpdates.getPriority());
+        }
+        if (taskUpdates.getIsCompleted() != null) {
+            existingTask.setIsCompleted(taskUpdates.getIsCompleted());
+        }
+
+        return taskRepo.save(existingTask);
     }
 
     @Override
