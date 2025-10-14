@@ -58,12 +58,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(Integer id, User user) {
-        if (!userRepo.existsById(id)) {
-            throw new UserNotFoundException("User not found with id: " + id);
+    public User updateUser(Integer id, User userUpdates) {
+        User existingUser = userRepo.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+
+        if (userUpdates.getName() != null) {
+            existingUser.setName(userUpdates.getName());
         }
-        user.setUserId(id);
-        return userRepo.save(user);
+
+        // Save and return the updated user
+        return userRepo.save(existingUser);
     }
 
     @Override
