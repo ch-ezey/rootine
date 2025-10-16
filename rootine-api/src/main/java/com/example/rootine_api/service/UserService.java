@@ -19,6 +19,4 @@ public interface UserService {
 
     void updateLastLogin(Integer id);
     void updateLastLogin(String email);
-
-    User getCurrentUser();
 }

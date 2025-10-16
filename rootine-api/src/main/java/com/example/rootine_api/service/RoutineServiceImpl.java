@@ -1,25 +1,24 @@
 package com.example.rootine_api.service;
 
 import com.example.rootine_api.model.Routine;
-import com.example.rootine_api.model.User;
 import com.example.rootine_api.repository.RoutineRepo;
-import com.example.rootine_api.repository.UserRepo;
+import com.example.rootine_api.security.AuthService;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
-public class RoutineServiceImpl implements RoutineService{
+public class RoutineServiceImpl implements RoutineService {
 
-    @Autowired
-    private RoutineRepo routineRepo;
+    private final RoutineRepo routineRepo;
+    private final AuthService authService;
 
-    @Autowired
-    private UserService userService;
+    public RoutineServiceImpl(RoutineRepo routineRepo, AuthService authService) {
+        this.routineRepo = routineRepo;
+        this.authService = authService;
+    }
+
+    // ─── Retrieval ───────────────────────────────────────────────────────────────────
 
     @Override
     public List<Routine> getAllRoutines() {
@@ -29,7 +28,7 @@ public class RoutineServiceImpl implements RoutineService{
     @Override
     public Routine getRoutineById(Integer id) {
         return routineRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Routine not found with id: " + id)) ;
+                .orElseThrow(() -> new EntityNotFoundException("Routine not found with id: " + id));
     }
 
     @Override
@@ -37,53 +36,44 @@ public class RoutineServiceImpl implements RoutineService{
         return routineRepo.findByUserUserId(userId);
     }
 
+    // ─── Create ───────────────────────────────────────────────────────────────────
+
     @Override
     public Routine addRoutine(Routine routine) {
         return routineRepo.save(routine);
     }
 
+    // ─── Update ───────────────────────────────────────────────────────────────────
+
     @Override
-    public Routine updateRoutine(Integer id, Routine routineUpdates) {
-        User currentUser = userService.getCurrentUser();
+    public Routine updateRoutine(Integer id, Routine updates) {
         Routine existingRoutine = getRoutineById(id);
 
-        boolean isOwner = existingRoutine.getUser().getUserId().equals(currentUser.getUserId());
-        boolean isAdmin = currentUser.getAuthorities()
-                .stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        authService.verifyOwnershipOrAdmin(existingRoutine.getUser().getUserId());
 
-        // Authorization check
-        if (!isOwner && !isAdmin) {
-            throw new AccessDeniedException("You are not authorized to modify this routine.");
-        }
+        applyRoutineUpdates(existingRoutine, updates);
 
-        // Update only fields that are allowed to change
-        if (routineUpdates.getTitle() != null) {
-            existingRoutine.setTitle(routineUpdates.getTitle());
-        }
-        if (routineUpdates.getTheme() != null) {
-            existingRoutine.setTheme(routineUpdates.getTheme());
-        }
-        if (routineUpdates.getDetailLevel() != null) {
-            existingRoutine.setDetailLevel(routineUpdates.getDetailLevel());
-        }
-        if (routineUpdates.getIsActive() != null) {
-            existingRoutine.setIsActive(routineUpdates.getIsActive());
-        }
-        if (routineUpdates.getCreatedAt() != null) {
-            existingRoutine.setCreatedAt(routineUpdates.getCreatedAt());
-        }
-
-        // Save and return updated entity
         return routineRepo.save(existingRoutine);
     }
 
+    // ─── Delete ───────────────────────────────────────────────────────────────────
 
     @Override
     public void deleteRoutine(Integer id) {
-        if (!routineRepo.existsById(id)) {
-            throw new EntityNotFoundException("Routine not found with id: " + id);
-        }
-        routineRepo.deleteById(id);
+        Routine existingRoutine = getRoutineById(id);
+
+        authService.verifyOwnershipOrAdmin(existingRoutine.getUser().getUserId());
+
+        routineRepo.delete(existingRoutine);
+    }
+
+    // ─── Utility ───────────────────────────────────────────────────────────────────
+
+    private void applyRoutineUpdates(Routine existing, Routine updates) {
+        if (updates.getTitle() != null) existing.setTitle(updates.getTitle());
+        if (updates.getTheme() != null) existing.setTheme(updates.getTheme());
+        if (updates.getDetailLevel() != null) existing.setDetailLevel(updates.getDetailLevel());
+        if (updates.getIsActive() != null) existing.setIsActive(updates.getIsActive());
+        if (updates.getCreatedAt() != null) existing.setCreatedAt(updates.getCreatedAt());
     }
 }

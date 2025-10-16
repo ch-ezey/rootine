@@ -4,9 +4,8 @@ import com.example.rootine_api.exception.UserAlreadyExistsException;
 import com.example.rootine_api.exception.UserNotFoundException;
 import com.example.rootine_api.model.User;
 import com.example.rootine_api.repository.UserRepo;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.rootine_api.security.AuthService;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,16 +16,17 @@ import java.util.UUID;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepo userRepo;
+    private final UserRepo userRepo;
+    private final AuthService authService;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    public User getCurrentUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return getUserByEmail(email);
+    public UserServiceImpl(UserRepo userRepo, AuthService authService, PasswordEncoder passwordEncoder) {
+        this.userRepo = userRepo;
+        this.authService = authService;
+        this.passwordEncoder = passwordEncoder;
     }
+
+    // ─── Retrieval ───────────────────────────────────────────────────────────────
 
     @Override
     public List<User> getAllUser() {
@@ -41,11 +41,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserByEmail(String email) {
-        User user = userRepo.findByEmail(email);
-        if (user == null) {
-            throw new UserNotFoundException("User not found with email: " + email);
-        }
-        return user;
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
 
     @Override
@@ -54,79 +51,62 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with UUID: " + uuid));
     }
 
-    @Override
-    public void addUser(User user) {
-        if (userRepo.findByEmail(user.getEmail()) != null) {
-            throw new UserAlreadyExistsException("User with email " + user.getEmail() + " already exists");
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setUuid(UUID.randomUUID());
-        userRepo.save(user);
-    }
-
-    @Override
-    public User updateUser(Integer id, User userUpdates) {
-        User currentUser = getCurrentUser();
-
-        User existingUser = getUserById(id);
-
-        boolean isOwner = existingUser.getUserId().equals(currentUser.getUserId());
-        boolean isAdmin = currentUser.getAuthorities()
-                .stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-
-        // Authorization check
-        if (!isOwner && !isAdmin) {
-            throw new AccessDeniedException("You are not authorized to modify this user.");
-        }
-
-        if (userUpdates.getName() != null) {
-            existingUser.setName(userUpdates.getName());
-        }
-
-        // Save and return the updated user
-        return userRepo.save(existingUser);
-    }
-
-    @Override
-    public void deleteUser(Integer id) {
-        if (!userRepo.existsById(id)) {
-            throw new UserNotFoundException("User not found with id: " + id);
-        }
-        userRepo.deleteById(id);
-    }
+    // ─── Create / Register ────────────────────────────────────────────────────────
 
     @Override
     public User registerUser(User registerRequest) {
-        if (userRepo.findByEmail(registerRequest.getEmail()) != null) {
-            throw new UserAlreadyExistsException("User already exists with email: " + registerRequest.getEmail());
-        }
+        userRepo.findByEmail(registerRequest.getEmail())
+                .ifPresent(u -> { throw new UserAlreadyExistsException("User already exists with email: " + u.getEmail()); });
 
         registerRequest.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         registerRequest.setUuid(UUID.randomUUID());
-
         return userRepo.save(registerRequest);
     }
 
     @Override
-    public void updateLastLogin(Integer id) {
-        User user = userRepo.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    public void addUser(User user) {
+        registerUser(user); // delegate for consistency
+    }
 
+    // ─── Update ───────────────────────────────────────────────────────────────────
+
+    @Override
+    public User updateUser(Integer id, User userUpdates) {
+        User existingUser = getUserById(id);
+        authService.verifyOwnershipOrAdmin(existingUser.getUserId());
+
+        applyUserUpdates(existingUser, userUpdates);
+        return userRepo.save(existingUser);
+    }
+
+    private void applyUserUpdates(User existing, User updates) {
+        if (updates.getName() != null) existing.setName(updates.getName());
+        if (updates.getEmail() != null) existing.setEmail(updates.getEmail()); // optional improvement
+        if (updates.getPassword() != null) existing.setPassword(passwordEncoder.encode(updates.getPassword()));
+    }
+
+    // ─── Delete ───────────────────────────────────────────────────────────────────
+
+    @Override
+    public void deleteUser(Integer id) {
+        User existingUser = getUserById(id);
+        authService.verifyOwnershipOrAdmin(existingUser.getUserId());
+        userRepo.delete(existingUser);
+    }
+
+    // ─── Utility ──────────────────────────────────────────────────────────────────
+
+    @Override
+    public void updateLastLogin(Integer id) {
+        User user = getUserById(id);
         user.setLastLogin(LocalDateTime.now());
         userRepo.save(user);
     }
 
     @Override
     public void updateLastLogin(String email) {
-        User user = userRepo.findByEmail(email);
-        if (user == null) {
-            throw new UserNotFoundException("User not found with email: " + email);
-        }
-
+        User user = getUserByEmail(email);
         user.setLastLogin(LocalDateTime.now());
         userRepo.save(user);
     }
-
-
 }
