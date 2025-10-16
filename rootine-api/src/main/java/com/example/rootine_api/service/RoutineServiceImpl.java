@@ -1,9 +1,13 @@
 package com.example.rootine_api.service;
 
 import com.example.rootine_api.model.Routine;
+import com.example.rootine_api.model.User;
 import com.example.rootine_api.repository.RoutineRepo;
+import com.example.rootine_api.repository.UserRepo;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +17,9 @@ public class RoutineServiceImpl implements RoutineService{
 
     @Autowired
     private RoutineRepo routineRepo;
+
+    @Autowired
+    private UserService userService;
 
     @Override
     public List<Routine> getAllRoutines() {
@@ -37,8 +44,14 @@ public class RoutineServiceImpl implements RoutineService{
 
     @Override
     public Routine updateRoutine(Integer id, Routine routineUpdates) {
-        Routine existingRoutine = routineRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Routine not found with id: " + id));
+        User currentUser = userService.getCurrentUser();
+
+        Routine existingRoutine = getRoutineById(id);
+
+        // Authorization check
+        if (!existingRoutine.getUser().getUserId().equals(currentUser.getUserId())) {
+            throw new AccessDeniedException("You are not authorized to modify this routine.");
+        }
 
         // Update only fields that are allowed to change
         if (routineUpdates.getTitle() != null) {
