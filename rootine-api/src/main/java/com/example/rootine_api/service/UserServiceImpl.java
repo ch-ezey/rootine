@@ -5,6 +5,7 @@ import com.example.rootine_api.exception.UserNotFoundException;
 import com.example.rootine_api.model.User;
 import com.example.rootine_api.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -65,8 +66,19 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(Integer id, User userUpdates) {
-        User existingUser = userRepo.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+        User currentUser = getCurrentUser();
+
+        User existingUser = getUserById(id);
+
+        boolean isOwner = existingUser.getUserId().equals(currentUser.getUserId());
+        boolean isAdmin = currentUser.getAuthorities()
+                .stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        // Authorization check
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("You are not authorized to modify this user.");
+        }
 
         if (userUpdates.getName() != null) {
             existingUser.setName(userUpdates.getName());

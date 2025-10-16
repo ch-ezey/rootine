@@ -1,9 +1,11 @@
 package com.example.rootine_api.service;
 
 import com.example.rootine_api.model.Task;
+import com.example.rootine_api.model.User;
 import com.example.rootine_api.repository.TaskRepo;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +15,9 @@ public class TaskServiceImpl implements TaskService {
 
     @Autowired
     private TaskRepo taskRepo;
+
+    @Autowired
+    private UserService userService;
 
     @Override
     public List<Task> getAllTasks() {
@@ -37,8 +42,19 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task updateTask(Integer id, Task taskUpdates) {
-        Task existingTask = taskRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Task not found with id: " + id));
+        User currentUser = userService.getCurrentUser();
+
+        Task existingTask = getTaskById(id);
+
+        boolean isOwner = existingTask.getRoutine().getUser().getUserId().equals(currentUser.getUserId());
+        boolean isAdmin = currentUser.getAuthorities()
+                .stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
+        // Authorization check
+        if (!isOwner && !isAdmin) {
+            throw new AccessDeniedException("You are not authorized to modify this task.");
+        }
 
         // Update only fields that are allowed to change
         if (taskUpdates.getTitle() != null) {

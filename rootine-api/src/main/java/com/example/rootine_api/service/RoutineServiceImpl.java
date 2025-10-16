@@ -45,11 +45,15 @@ public class RoutineServiceImpl implements RoutineService{
     @Override
     public Routine updateRoutine(Integer id, Routine routineUpdates) {
         User currentUser = userService.getCurrentUser();
-
         Routine existingRoutine = getRoutineById(id);
 
+        boolean isOwner = existingRoutine.getUser().getUserId().equals(currentUser.getUserId());
+        boolean isAdmin = currentUser.getAuthorities()
+                .stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+
         // Authorization check
-        if (!existingRoutine.getUser().getUserId().equals(currentUser.getUserId())) {
+        if (!isOwner && !isAdmin) {
             throw new AccessDeniedException("You are not authorized to modify this routine.");
         }
 
