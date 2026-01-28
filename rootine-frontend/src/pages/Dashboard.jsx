@@ -16,7 +16,7 @@ const Dashboard = () => {
 			if (!user) return;
 			setFetching(true);
 			try {
-				const routinesData = await getRoutineByUserId(user.id); // returns JSON array
+				const routinesData = await getRoutineByUserId(user.id);
 				setRoutines(routinesData);
 				console.log("Fetched routines:", routinesData);
 			} catch (err) {
@@ -58,31 +58,36 @@ const Dashboard = () => {
 
 				{/* Manual Routine Management */}
 				<div className='dashboard-section'>
-					<h2>Your Routines</h2>
-					<input
-						name='routine-name'
-						type='text'
-						placeholder='Enter new routine'
-						value={newRoutine}
-						onChange={(e) => setNewRoutine(e.target.value)}
-					/>
-					<button onClick={handleAddRoutine}>Add Routine</button>
-
-					<ul>
-						{routines.map((routine, index) => (
-							<li key={routine.routineId || index}>
-								<div>
-									<strong>{routine.title}</strong>
-									<p>Theme: {routine.theme}</p>
-									<p>Detail Level: {routine.detailLevel}</p>
-									<p>Status: {routine.isActive ? "Active" : "Inactive"}</p>
-								</div>
-								<button onClick={() => handleDeleteRoutine(index)}>
-									Delete
-								</button>
-							</li>
-						))}
-					</ul>
+					<div className='routine-container'>
+						<div className='input-container'>
+							<h2>Your Routines</h2>
+							<input
+								name='routine-name'
+								type='text'
+								placeholder='Enter new routine'
+								value={newRoutine}
+								onChange={(e) => setNewRoutine(e.target.value)}
+							/>
+							<button onClick={handleAddRoutine}>Add Routine</button>
+						</div>
+						<div className='routines'>
+							<ul>
+								{routines.map((routine, index) => (
+									<li key={routine.routineId || index}>
+										<div>
+											<strong>{routine.title}</strong>
+											<p>Theme: {routine.theme}</p>
+											<p>Detail Level: {routine.detailLevel}</p>
+											<p>Status: {routine.isActive ? "Active" : "Inactive"}</p>
+										</div>
+										<button onClick={() => handleDeleteRoutine(index)}>
+											Delete
+										</button>
+									</li>
+								))}
+							</ul>
+						</div>
+					</div>
 				</div>
 
 				{/* AI Routine Generation */}
