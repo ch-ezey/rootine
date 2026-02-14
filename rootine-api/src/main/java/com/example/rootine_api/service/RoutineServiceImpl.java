@@ -70,8 +70,7 @@ public class RoutineServiceImpl implements RoutineService {
     // ─── Utility ───────────────────────────────────────────────────────────────────
 
     private void applyRoutineUpdates(Routine existing, Routine updates) {
-        if (updates.getTitle() != null) existing.setTitle(updates.getTitle());
-        if (updates.getTheme() != null) existing.setTheme(updates.getTheme());
+        if (updates.getName() != null) existing.setName(updates.getName());
         if (updates.getDetailLevel() != null) existing.setDetailLevel(updates.getDetailLevel());
         if (updates.getIsActive() != null) existing.setIsActive(updates.getIsActive());
         if (updates.getCreatedAt() != null) existing.setCreatedAt(updates.getCreatedAt());

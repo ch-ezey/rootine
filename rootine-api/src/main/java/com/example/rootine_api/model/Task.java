@@ -36,17 +36,21 @@ public class Task {
     @Column(name = "title", nullable = false, length = 150)
     private String title;
 
+    @Column(name = "description")
+    private String description;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "task_type")
-    private TaskType taskType = TaskType.ONE_TIME;
+    @Column(name = "type")
+    private TaskType taskType = TaskType.routine;
 
     @Column(name = "start_time")
     private LocalDateTime startTime;
 
+    @Column(name = "duration")
     private Integer duration;
 
     @Enumerated(EnumType.STRING)
-    private Priority priority = Priority.MEDIUM;
+    private Priority priority = Priority.medium;
 
     @Column(name = "is_completed")
     private Boolean isCompleted = false;

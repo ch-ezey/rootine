@@ -32,15 +32,15 @@ public class Routine {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "title", nullable = false)
-    private String title;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-    @Column(name = "theme")
-    private String theme;
+    @Column(name = "description")
+    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "detail_level")
-    private DetailLevel detailLevel = DetailLevel.MEDIUM;
+    private DetailLevel detailLevel = DetailLevel.medium;
 
     @Column(name = "is_active")
     private Boolean isActive = false;
