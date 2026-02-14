@@ -2,16 +2,15 @@ package com.example.rootine_api.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.time.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.time.*;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "user")
@@ -19,8 +18,6 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-//@Data
-//@Builder
 public class User implements UserDetails {
 
     @Id
@@ -29,9 +26,14 @@ public class User implements UserDetails {
     private Integer userId;
 
     // Public identifier
-    @Column(name = "uuid", unique = true, updatable = false, nullable = false, length = 36)
+    @Column(
+        name = "uuid",
+        unique = true,
+        updatable = false,
+        nullable = false,
+            columnDefinition = "BINARY(16)"
+    )
     private UUID uuid = UUID.randomUUID(); // Automatically assigns a UUID when the object is created
-
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -55,7 +57,7 @@ public class User implements UserDetails {
         this.name = name;
     }
 
-//    @JsonIgnore
+    //    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
@@ -95,5 +97,4 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
 }
