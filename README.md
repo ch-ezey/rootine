@@ -1,148 +1,264 @@
-# Rootine (Monorepo)
+# 🧠 Smart Routine App (Rootine)
 
-Rootine is a full-stack “smart routine” application split into two projects:
+Smart Routine App (“Rootine”) is a SaaS-style platform that helps you **generate, manage, and optimize daily routines**. The goal is to go beyond a basic to-do list and become a **context-aware routine system** that can build structure from your input, handle task prerequisites, and adapt when real life (events, conflicts, time constraints) happens.
 
-- `rootine-api/` — Spring Boot (Java 17) backend API
+This repo is a monorepo with:
+- `rootine-api/` — Spring Boot backend API (Java 17)
 - `rootine-frontend/` — React + Vite frontend
 
-## Repository layout
+---
 
-- `rootine-api/`
-  - Spring Boot 3.x app (Maven)
-  - Includes: Spring Web, Security, Data JPA, Validation, WebSocket, MySQL driver, JWT libs, and `openai-java`
-  - Contains `Dockerfile` and `docker-compose.yml` for local infrastructure
-- `rootine-frontend/`
-  - React app bootstrapped with Vite
-  - Uses `react-router-dom` and `axios`
-  - Dev scripts: `dev`, `build`, `lint`, `preview`
+## 📌 What you’re building (vision)
+
+Rootine aims to become:
+
+> A context-aware productivity engine that intelligently constructs and adapts daily structure around real life.
+
+Unlike traditional task managers, this system:
+- thinks in **structured routines**
+- understands **dependencies**
+- adapts to **events**
+- supports multiple lifestyle modes (e.g., Work, Fitness, General Daily)
+
+Future roadmap includes:
+- AI-powered optimization & scheduling
+- image-based task capture
+- predictive scheduling
+- SaaS subscription tiers
+- cross-device sync
+- team/shared routines
 
 ---
 
-## Prerequisites
+## 🧠 Core concepts & capabilities
 
-### Backend (`rootine-api`)
-- Java 17
-- Maven (or use `./mvnw`)
-- A MySQL instance (local or via Docker)
+### Multiple routines per user
+You can support multiple active “modes”:
+- Work routine
+- Fitness routine
+- General daily routine
+…and more.
 
-### Frontend (`rootine-frontend`)
-- Node.js (LTS recommended)
-- npm (or your preferred Node package manager)
+### Automatic routine generation (prompt → plan)
+The product direction is to accept user context and generate a structured routine. Routines support adjustable “detail level”, ranging from:
+- high-level blocks (e.g., “Morning Routine”)
+- medium detail
+- fully granular breakdown
 
----
+### Task system with dependencies
+Tasks can:
+- belong to routines
+- be standalone (one-time / event)
+- depend on other tasks (“Shower” after “Workout”)
+- be ordered and scheduled logically
 
-## Quick start (local dev)
+### Event accommodation
+When you add an event:
+- active routines can shift
+- conflicts can be resolved
+- timing can be adjusted intelligently
 
-### 1) Start the backend
-
-From `rootine-api/`:
-
-1. (Recommended) Start dependencies (MySQL) with Docker Compose:
-   - If the project’s `docker-compose.yml` defines MySQL, bring it up:
-     - `docker compose up -d`
-
-2. Configure Spring datasource + auth secrets:
-   - Use `application.properties` / `application.yml` and/or environment variables.
-   - Typical values you’ll need:
-     - DB host/port/name/user/password
-     - JWT secret (if security is enabled)
-     - OpenAI API key (only if you use AI-powered endpoints)
-
-3. Run the API:
-   - `./mvnw spring-boot:run`
-   - Or build + run:
-     - `./mvnw clean package`
-     - `java -jar target/*.jar`
-
-Notes:
-- The API project is a standard Spring Boot app; port and context path depend on your Spring configuration.
-- If CORS is not configured and your frontend can’t call the API, you’ll need to enable CORS in the backend (or proxy in Vite).
+### Notifications (planned / in-progress)
+- persistent notifications
+- reminders and alerts
+- device token support for push notifications
 
 ---
 
-### 2) Start the frontend
+## 🏗 Current architecture (repo reality)
 
-From `rootine-frontend/`:
+### Backend: `rootine-api/`
+**Stack**
+- Java 17, Spring Boot (3.4.x)
+- Spring Web, Spring Security, Spring Data JPA, Validation
+- WebSocket support
+- MySQL connector
+- JWT (`jjwt`)
+- OpenAI Java client (`com.openai:openai-java`)
 
-1. Install dependencies:
-   - `npm install`
+**Notes**
+- The backend project includes `Dockerfile` and `docker-compose.yml` to support local infrastructure (e.g., MySQL).
 
-2. Run the dev server:
-   - `npm run dev`
+### Frontend: `rootine-frontend/`
+**Stack**
+- React (Vite)
+- `react-router-dom`
+- `axios`
 
-3. Configure the API base URL:
-   - If the frontend is hardcoded to an API URL, update it accordingly.
-   - If it uses Vite env vars, set something like:
-     - `VITE_API_BASE_URL=http://localhost:<api-port>`
-   - Then reference it in the code where `axios` is configured.
-
-Build / preview:
+**Scripts**
+- `npm run dev`
 - `npm run build`
+- `npm run lint`
 - `npm run preview`
 
 ---
 
-## Environment & configuration
+## 🗃 Database schema (current state)
 
-### Backend secrets
-Do not commit secrets. Prefer environment variables or a local-only config file.
+The database is relational and oriented around clean relationships, foreign keys, and indexing.
 
-Common configuration you may need:
-- **Database**
-  - `SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/<db>`
-  - `SPRING_DATASOURCE_USERNAME=<user>`
-  - `SPRING_DATASOURCE_PASSWORD=<password>`
-- **JWT**
-  - `JWT_SECRET=<secret>`
-- **OpenAI**
-  - `OPENAI_API_KEY=<api-key>`
+Core tables (conceptually):
+- `user`
+- `routine`
+- `task`
+- `event`
+- `note`
+- `dependency`
+- `setting`
+- `template`
+- `device_token`
 
-Exact keys depend on how the backend is wired (check `rootine-api/src/...` config classes and `application*.properties`).
+Task types (current / planned):
+- `routine` (part of a recurring routine)
+- `one-time`
+- `event`
+- `habit` (may later merge into “recurring” + behavior tracking)
 
-### Frontend config
-If you want configurable API URLs per environment, prefer Vite env vars:
-- `.env.local` (not committed)
-  - `VITE_API_BASE_URL=...`
+Key relationships:
+- A user has many routines
+- A routine has many tasks
+- A task can:
+  - belong to a routine or be standalone
+  - have dependencies (via `dependency`)
+  - have notes
+- Events can override or interact with routines
+- Settings are scoped per routine (detail level is routine-specific)
+- Templates enable reusable routine generation
+- Device tokens support push notifications
 
 ---
 
-## Development workflow
+## 🎨 Frontend (MVP pages / direction)
 
-- Run backend and frontend in two terminals.
-- Backend changes: Spring Boot devtools may hot reload depending on configuration.
-- Frontend changes: Vite HMR reloads instantly.
+Planned/defined pages:
+- Landing Page
+- Authentication (Login/Register)
+- Dashboard
+- Routine Overview
+- Routine Detail/Edit
+- Prompt-Based Routine Generation
+- Calendar View
+- Task Management
+- Settings
+
+MVP focus:
+- prompt-based generation
+- routine editing
+- event addition
+- active routine visualization
 
 ---
 
-## Tech stack
+## 🧪 Seeding & data
 
+The database is intended to be seeded with realistic data, including:
+- users
+- multiple routine types
+- tasks with recurrence rules
+- notes
+- dependencies
+- events
+- templates
+- routine-specific settings
+
+---
+
+## 🚀 Quick start (local development)
+
+### Prerequisites
 **Backend**
-- Spring Boot 3.4.x
-- Spring Security + JWT (`jjwt`)
-- Spring Data JPA
-- MySQL
-- WebSocket support
-- OpenAI Java client (`com.openai:openai-java`)
+- Java 17
+- Maven (or use the Maven wrapper: `./mvnw`)
+- MySQL (local or via Docker)
 
 **Frontend**
-- React (Vite)
-- React Router
-- Axios
+- Node.js (LTS recommended)
+- npm
 
 ---
 
-## Troubleshooting
+## ▶️ Run the backend (`rootine-api/`)
+
+1) Start dependencies (if defined in `docker-compose.yml`):
+- `docker compose up -d`
+
+2) Configure application settings (DB + auth secrets)
+- Prefer environment variables or local-only config.
+- Typical values you’ll need:
+  - Spring datasource URL/user/password
+  - JWT secret (if security is enabled)
+  - OpenAI API key (only if you use AI-powered endpoints)
+
+Common environment variables (examples):
+- `SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/<db>`
+- `SPRING_DATASOURCE_USERNAME=<user>`
+- `SPRING_DATASOURCE_PASSWORD=<password>`
+- `JWT_SECRET=<secret>`
+- `OPENAI_API_KEY=<api-key>`
+
+3) Start the API:
+- `./mvnw spring-boot:run`
+
+Or build + run:
+- `./mvnw clean package`
+- `java -jar target/*.jar`
+
+---
+
+## ▶️ Run the frontend (`rootine-frontend/`)
+
+1) Install dependencies:
+- `npm install`
+
+2) Start dev server:
+- `npm run dev`
+
+3) Configure API base URL
+- If you want environment-based configuration, use Vite env vars, e.g. create `.env.local` (do not commit):
+  - `VITE_API_BASE_URL=http://localhost:<api-port>`
+
+Then reference `VITE_API_BASE_URL` wherever you configure `axios`.
+
+---
+
+## 🧩 Planned / in-progress (high level)
+
+- REST API completion + auth flows
+- routine generation engine refinement
+- notification system integration
+- containerization + CI/CD (planned)
+- scalable infrastructure (Kubernetes planned)
+- habit tracking evolution (streaks, analytics)
+- templates: predefined, user-generated, and potential marketplace direction
+
+---
+
+## 🧯 Troubleshooting
 
 ### Frontend can’t reach backend
-- Verify API port is correct and the backend is running.
+- Confirm the backend is running and you’re targeting the correct port.
 - Check CORS configuration in the backend.
-- If you use cookies/auth headers, confirm `withCredentials` / CORS headers as needed.
+- If auth uses cookies/credentials, ensure your CORS + client settings support it.
 
-### Database connection errors
-- Confirm MySQL is running and accessible.
-- Validate JDBC URL, credentials, and schema initialization strategy.
+### Database connection issues
+- Confirm MySQL is running (and reachable from the API container/process).
+- Validate JDBC URL, credentials, and schema/init strategy.
 
 ---
 
-## License
-If a top-level license is added, document it here. Otherwise, check each subproject for licensing information.
+## 📂 Project status
+
+Current stage:
+- backend schema design + routine logic refinement + seed data creation
+
+Next steps:
+- finalize routine generation engine
+- implement REST APIs
+- build MVP frontend
+- integrate notifications
+- begin containerization
+
+---
+
+## 📄 License
+If you add a top-level license, document it here. Otherwise, check each subproject for licensing information.
