@@ -13,7 +13,7 @@ public class OpenAIController {
     @Autowired
     private OpenAIService openAIService;
 
-    @GetMapping("/response")
+    @PostMapping("/response")
     private ResponseEntity<String> getOpenAIResponse(@RequestBody String prompt){
         String response = openAIService.generateRoutine(prompt);
         return ResponseEntity.ok(response);
