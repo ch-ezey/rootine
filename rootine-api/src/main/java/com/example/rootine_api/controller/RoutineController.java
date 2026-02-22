@@ -4,14 +4,12 @@ import com.example.rootine_api.model.Routine;
 import com.example.rootine_api.model.User;
 import com.example.rootine_api.service.RoutineService;
 import com.example.rootine_api.service.UserService;
+import java.security.Principal;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.AccessDeniedException;
-import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/routine")
@@ -37,13 +35,18 @@ public class RoutineController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Routine>> getRoutinesByUserId(@PathVariable Integer userId) {
+    public ResponseEntity<List<Routine>> getRoutinesByUserId(
+        @PathVariable Integer userId
+    ) {
         List<Routine> routines = routineService.getRoutinesByUserId(userId);
         return ResponseEntity.ok(routines);
     }
 
     @PostMapping
-    public ResponseEntity<Routine> addRoutine(@RequestBody Routine routine, Principal principal) {
+    public ResponseEntity<Routine> addRoutine(
+        @RequestBody Routine routine,
+        Principal principal
+    ) {
         User user = userService.getUserByEmail(principal.getName());
 
         routine.setUser(user);
@@ -52,9 +55,23 @@ public class RoutineController {
         return ResponseEntity.ok(savedRoutine);
     }
 
+
+    @PostMapping("/{id}/activate")
+    public ResponseEntity<Routine> activateRoutine(@PathVariable Integer id) {
+        Routine updated = routineService.activateRoutine(id);
+        return ResponseEntity.ok(updated);
+    }
+
+
     @PutMapping("/{id}")
-    public ResponseEntity<Routine> updateRoutine(@PathVariable Integer id, @RequestBody Routine routineUpdates) {
-        Routine updatedRoutine = routineService.updateRoutine(id, routineUpdates);
+    public ResponseEntity<Routine> updateRoutine(
+        @PathVariable Integer id,
+        @RequestBody Routine routineUpdates
+    ) {
+        Routine updatedRoutine = routineService.updateRoutine(
+            id,
+            routineUpdates
+        );
         return ResponseEntity.ok(updatedRoutine);
     }
 

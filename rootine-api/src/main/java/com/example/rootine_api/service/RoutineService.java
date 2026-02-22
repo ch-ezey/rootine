@@ -2,7 +2,6 @@ package com.example.rootine_api.service;
 
 import com.example.rootine_api.model.Routine;
 
-import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 public interface RoutineService {
@@ -12,4 +11,5 @@ public interface RoutineService {
     Routine addRoutine(Routine routine);
     Routine updateRoutine(Integer id, Routine routine);
     void deleteRoutine(Integer id);
+    Routine activateRoutine(Integer id);
 }
