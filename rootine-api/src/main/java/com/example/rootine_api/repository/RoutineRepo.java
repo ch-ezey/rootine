@@ -20,13 +20,12 @@ public interface RoutineRepo extends JpaRepository<Routine, Integer> {
      */
     @Modifying
     @Query(
-            """
-            UPDATE Routine r
-            SET r.active = false
-            WHERE r.user.userId = :userId
-                AND r.active = true
-            """
+        """
+        UPDATE Routine r
+        SET r.isActive = false
+        WHERE r.user.userId = :userId
+          AND r.isActive = true
+        """
     )
     int deactivateAllActiveForUser(Integer userId);
-    
 }

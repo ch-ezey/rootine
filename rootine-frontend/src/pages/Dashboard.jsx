@@ -98,7 +98,7 @@ const Dashboard = () => {
       name,
       description: "",
       detailLevel: "",
-      isActive: true,
+      isActive: false,
       __optimistic: true,
     };
 
