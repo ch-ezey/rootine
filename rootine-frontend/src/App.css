@@ -31,8 +31,42 @@ body {
     margin: 0 auto;
     padding: 0.75rem 1.5rem;
     display: flex;
-    gap: 1rem;
     align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.top-nav__left,
+.top-nav__center,
+.top-nav__right {
+    display: flex;
+    align-items: center;
+}
+
+.top-nav__center {
+    flex: 1;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.top-nav__brand {
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+.top-nav__settings {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.top-nav__settings:hover {
+    background: #f3f4f6;
+    text-decoration: none;
 }
 
 .top-nav__inner a {

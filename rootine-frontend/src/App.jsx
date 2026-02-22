@@ -22,10 +22,32 @@ function AppShell() {
     <div className="app-shell">
       <header className="top-nav">
         <nav className="top-nav__inner" aria-label="Primary">
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/calendar">Calendar</Link>
-          <Link to="/user">User</Link>
-          <Link to="/context">Context</Link>
+          {/* Left: Brand */}
+          <div className="top-nav__left">
+            <Link to="/dashboard" className="top-nav__brand">
+              Rootine
+            </Link>
+          </div>
+
+          {/* Middle: Primary links */}
+          <div className="top-nav__center">
+            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/calendar">Calendar</Link>
+            <Link to="/user">User</Link>
+            <Link to="/context">Context</Link>
+          </div>
+
+          {/* Right: Settings (placeholder) */}
+          <div className="top-nav__right">
+            <Link
+              to="/settings"
+              aria-label="Settings"
+              title="Settings"
+              className="top-nav__settings"
+            >
+              ⚙
+            </Link>
+          </div>
         </nav>
       </header>
 
@@ -55,6 +77,15 @@ function ContextPage() {
   );
 }
 
+function SettingsPage() {
+  return (
+    <div className="container">
+      <h1>Settings</h1>
+      <p>(Placeholder) Settings page will be implemented later.</p>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -76,6 +107,7 @@ export default function App() {
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/user" element={<User />} />
             <Route path="/context" element={<ContextPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
 
             {/* Existing routine page remains protected */}
             <Route path="/routine/:id" element={<Routine />} />

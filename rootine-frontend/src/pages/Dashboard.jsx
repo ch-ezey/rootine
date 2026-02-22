@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useMemo } from "react";
 import { AuthContext } from "../AuthContext";
-import { useNavigate } from "react-router-dom";
+
 import {
   createRoutine,
   deleteRoutine,
@@ -10,7 +10,7 @@ import {
 import { getTasksByRoutineId } from "../api/task";
 
 const Dashboard = () => {
-  const { user, loading, logout } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
   const [routines, setRoutines] = useState([]);
   const [newRoutine, setNewRoutine] = useState("");
   const [fetching, setFetching] = useState(false);
@@ -29,8 +29,6 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [tasksError, setTasksError] = useState(null);
-
-  const navigate = useNavigate();
 
   const activeRoutine = useMemo(() => {
     const list = Array.isArray(routines) ? routines : [];
@@ -235,11 +233,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login"); // redirect back to login
-  };
-
   const setActiveRoutine = async (routineId) => {
     if (!routineId) return;
 
@@ -280,7 +273,6 @@ const Dashboard = () => {
       <div className="dashboard-page">
         <div className="dashboard-header">
           <h1>Welcome, {user.name || user.email}!</h1>
-          <button onClick={handleLogout}>Logout</button>
         </div>
 
         {/* Active Routine Tasks (MVP) */}

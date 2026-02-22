@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../AuthContext";
+import { useNavigate } from "react-router-dom";
 import { getUserById, updateUser } from "../api/user";
 import {
   createRoutine,
@@ -26,7 +27,8 @@ import {
  */
 
 export default function User() {
-  const { user, loading: authLoading } = useContext(AuthContext);
+  const { user, loading: authLoading, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   // User info
   const [userLoading, setUserLoading] = useState(false);
@@ -378,13 +380,24 @@ export default function User() {
       <div className="container">Please log in to view your user page.</div>
     );
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   const displayName = userRecord?.name ?? user?.name ?? "(no name)";
   const displayEmail = userRecord?.email ?? user?.email ?? "(no email)";
   const displayId = userRecord?.userId ?? user?.id ?? "(unknown)";
 
   return (
     <div className="container">
-      <h1>User</h1>
+      <div
+        className="dashboard-header"
+        style={{ marginBottom: 16, alignItems: "center" }}
+      >
+        <h1 style={{ margin: 0 }}>User</h1>
+        <button onClick={handleLogout}>Logout</button>
+      </div>
 
       {/* User Info */}
       <section
