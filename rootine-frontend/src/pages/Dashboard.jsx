@@ -299,7 +299,7 @@ const Dashboard = () => {
                 <ul>
                   {tasks.map((t, idx) => (
                     <li key={t?.taskId || idx}>
-                      <strong>{t?.name ?? "Untitled task"}</strong>
+                      <strong>{t?.title ?? "Untitled task"}</strong>
                       {t?.description ? <p>{t.description}</p> : null}
                     </li>
                   ))}

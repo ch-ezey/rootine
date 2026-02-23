@@ -33,8 +33,8 @@ function AppShell() {
           <div className="top-nav__center">
             <Link to="/dashboard">Dashboard</Link>
             <Link to="/calendar">Calendar</Link>
-            <Link to="/user">User</Link>
             <Link to="/context">Context</Link>
+            <Link to="/user">User</Link>
           </div>
 
           {/* Right: Settings (placeholder) */}
@@ -45,7 +45,7 @@ function AppShell() {
               title="Settings"
               className="top-nav__settings"
             >
-              ⚙
+              Settings
             </Link>
           </div>
         </nav>

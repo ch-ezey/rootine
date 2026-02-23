@@ -81,14 +81,6 @@ public class RoutineServiceImpl implements RoutineService {
 
     // ─── Activate (Single-active enforcement) ───────────────────────────────────────
 
-    /**
-     * Enforces "only one routine can be active at a time" by:
-     * 1) verifying the caller owns the routine (or is admin)
-     * 2) bulk-deactivating any currently-active routines for the same user
-     * 3) activating the selected routine
-
-     * This is transactional so the deactivate + activate happen atomically.
-     */
     @Override
     @Transactional
     public Routine activateRoutine(Integer routineId) {
@@ -104,7 +96,6 @@ public class RoutineServiceImpl implements RoutineService {
         target.setIsActive(true);
         return routineRepo.save(target);
     }
-
 
     // ─── Utility ───────────────────────────────────────────────────────────────────
 

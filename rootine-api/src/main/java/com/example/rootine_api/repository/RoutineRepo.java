@@ -10,14 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RoutineRepo extends JpaRepository<Routine, Integer> {
     List<Routine> findByUserUserId(Integer userId);
-
-    /**
-     * Bulk-deactivate any active routines for a given user.
-
-     * Used to enforce "only one active routine at a time" when activating a routine.
-
-     * Returns the number of rows updated.
-     */
+    
     @Modifying
     @Query(
         """
