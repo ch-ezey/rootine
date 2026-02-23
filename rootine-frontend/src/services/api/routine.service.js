@@ -1,4 +1,4 @@
-import API from "./api";
+import API from "./httpClient";
 
 export const getRoutines = async () => {
   const res = await API.get("/routines");

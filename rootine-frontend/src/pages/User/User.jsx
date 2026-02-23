@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { AuthContext } from "../AuthContext";
 import { useNavigate } from "react-router-dom";
-import { getUserById, updateUser } from "../api/user";
+import { AuthContext } from "../../app/contexts/auth.context.js";
+import { getUserById, updateUser } from "../../services/api/user.service.js";
 import {
   createRoutine,
   deleteRoutine,
   getRoutineByUserId,
   updateRoutine,
-} from "../api/routine";
+} from "../../services/api/routine.service.js";
 
 /**
  * MVP User Page

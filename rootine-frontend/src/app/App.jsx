@@ -6,16 +6,16 @@ import {
   Link,
   Outlet,
 } from "react-router-dom";
-import { AuthProvider } from "./AuthContext";
-import ProtectedRoute from "./ProtectedRoute";
+import { AuthProvider } from "./providers/AuthProvider";
+import ProtectedRoute from "./router/ProtectedRoute";
 
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Routine from "./pages/Routine";
-import "./App.css";
-import Register from "./pages/Register";
-import LandingPage from "./pages/LandingPage";
-import User from "./pages/User";
+import Login from "../pages/Auth/Login";
+import Dashboard from "../pages/Dashboard/Dashboard";
+import Routine from "../pages/Routine/Routine";
+import "../shared/styles/App.css";
+import Register from "../pages/Auth/Register";
+import LandingPage from "../pages/Landing/LandingPage";
+import User from "../pages/User/User";
 
 function AppShell() {
   return (

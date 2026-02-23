@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RoutineRepo extends JpaRepository<Routine, Integer> {
     List<Routine> findByUserUserId(Integer userId);
-    
+
     @Modifying
     @Query(
         """

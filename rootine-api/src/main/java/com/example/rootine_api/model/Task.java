@@ -1,9 +1,11 @@
 package com.example.rootine_api.model;
 
-import com.example.rootine_api.enums.TaskType;
 import com.example.rootine_api.enums.Priority;
+import com.example.rootine_api.enums.TaskType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +13,6 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "task")
@@ -44,7 +44,7 @@ public class Task {
     private TaskType taskType = TaskType.routine;
 
     @Column(name = "start_time")
-    private LocalDateTime startTime;
+    private LocalTime startTime;
 
     @Column(name = "duration")
     private Integer duration;

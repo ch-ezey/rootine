@@ -9,64 +9,69 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OpenAIServiceImpl implements OpenAIService{
+public class OpenAIServiceImpl implements OpenAIService {
 
     private final OpenAIClient openAIClient;
 
+    /**
+     * IMPORTANT:
+     * This schema is intended to match the API contract you chose:
+     * - camelCase JSON keys
+     * - Task.startTime is time-of-day only (LocalTime) serialized as "HH:mm:ss"
+     * - Task.taskType values match your enum: routine | one_time | event | habit
+     * - Routine.detailLevel values match your enum: low | medium | high
+     */
     private static final String META_INSTRUCTIONS = """
     You are a structured routine generator.
-    Your task is to return ONLY valid JSON that strictly follows this schema:
+
+    Return ONLY valid JSON. Do not include markdown, code blocks, or explanations.
+
+    The JSON MUST strictly follow this schema (camelCase keys only):
 
     {
-      "detail_level": "string [low|medium|high]",
+      "name": "string",
+      "detailLevel": "low|medium|high",
       "description": "string (optional overall routine description)",
       "tasks": [
         {
           "title": "string",
-          "description": "string (optional additional context about the task)",
-          "type": "string [routine|event|habit|one-time]",
-          "start_time": "HH:MM:SS (24h format)",
-          "duration": "integer (minutes)",
-          "priority": "string [low|medium|high]"
+          "description": "string (optional)",
+          "taskType": "routine|one_time|event|habit",
+          "startTime": "HH:mm:ss (24h format, time-of-day only)",
+          "duration": "integer (minutes, positive)",
+          "priority": "low|medium|high"
         }
       ]
     }
 
     Rules:
-    - Return ONLY valid JSON.
-    - Do NOT include markdown formatting or code blocks.
-    - Do NOT include explanations.
-    - Ensure times are valid 24-hour format (HH:MM:SS).
-    - Ensure duration is a positive integer.
-    - The "description" fields are optional and may be omitted if unnecessary.
+    - Output MUST be a single JSON object (not an array).
+    - Use camelCase keys exactly as shown: detailLevel, taskType, startTime.
+    - taskType MUST be one of: routine, one_time, event, habit (use one_time, not one-time).
+    - startTime MUST be a valid 24-hour time string in HH:mm:ss.
+    - duration MUST be a positive integer.
     - Do not include any additional properties not listed in the schema.
-    - If unsure, return: { "detail_level": "medium", "tasks": [] }.
+    - If you are unsure or cannot comply, return exactly:
+      { "detailLevel": "medium", "tasks": [] }
     """;
 
-
+    @Override
     public String generateRoutine(String userPrompt) {
-        // Build the complete prompt for OpenAI
         String fullPrompt = META_INSTRUCTIONS + "\n\nUser request: " + userPrompt;
 
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                 .addUserMessage(fullPrompt)
-                .model(ChatModel.GPT_5_MINI) // or whichever model you want
+                .model(ChatModel.GPT_5_MINI)
                 .build();
 
         ChatCompletion chatCompletion = openAIClient.chat().completions().create(params);
 
-        String rawResponse = chatCompletion.choices().get(0).message().content().orElse("{}");
-
-        return rawResponse;
+        return chatCompletion.choices().get(0).message().content().orElse(getEmptyRoutine());
     }
-
 
     private String getEmptyRoutine() {
         return """
-            {
-              "detail_level": "medium",
-              "tasks": []
-            }
+            { "detailLevel": "medium", "tasks": [] }
             """;
     }
 }

@@ -1,4 +1,4 @@
-import API from "./api";
+import API from "./httpClient.js";
 
 /**
  * Backend controller base path: /task

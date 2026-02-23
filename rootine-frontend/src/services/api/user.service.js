@@ -1,4 +1,4 @@
-import API from "./api";
+import API from "./httpClient.js";
 
 export const getAllUsers = async () => {
   const res = await API.get("/user/users");
