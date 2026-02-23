@@ -561,6 +561,18 @@ export default function User() {
                       }}
                     >
                       <button
+                        onClick={() => navigate(`/routine/${r.routineId}`)}
+                        disabled={
+                          r.__optimistic ||
+                          isSaving ||
+                          isDeleting ||
+                          isActivating
+                        }
+                      >
+                        View routine
+                      </button>
+
+                      <button
                         onClick={() => setActiveRoutine(r.routineId)}
                         disabled={
                           r.__optimistic ||

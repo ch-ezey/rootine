@@ -5,9 +5,12 @@ import com.example.rootine_api.repository.TaskRepo;
 import com.example.rootine_api.security.AuthService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,38 +33,70 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task getTaskById(Integer id) {
-        return taskRepo
+        Task task = taskRepo
             .findById(id)
             .orElseThrow(() ->
                 new EntityNotFoundException("Task not found with id: " + id)
             );
+
+        // Enforce ownership on reads too (prevents cross-tenant access)
+        if (task.getRoutine() == null || task.getRoutine().getUser() == null) {
+            throw new AccessDeniedException(
+                "Task is missing routine/user association."
+            );
+        }
+        authService.verifyOwnershipOrAdmin(
+            task.getRoutine().getUser().getUserId()
+        );
+
+        return task;
     }
 
     @Override
     public List<Task> getTasksByRoutineId(Integer routineId) {
         // stable ordering: position asc, then taskId asc
-        return taskRepo.findByRoutineRoutineIdOrderByPositionAscTaskIdAsc(
-            routineId
-        );
+        List<Task> tasks =
+            taskRepo.findByRoutineRoutineIdOrderByPositionAscTaskIdAsc(
+                routineId
+            );
+
+        // Enforce ownership on reads too
+        if (!tasks.isEmpty()) {
+            Task any = tasks.get(0);
+            if (
+                any.getRoutine() == null || any.getRoutine().getUser() == null
+            ) {
+                throw new AccessDeniedException(
+                    "Tasks are missing routine/user association."
+                );
+            }
+            authService.verifyOwnershipOrAdmin(
+                any.getRoutine().getUser().getUserId()
+            );
+        }
+
+        return tasks;
     }
 
     // ─── Create ────────────────────────────────────────────────────────
 
     @Override
     public Task addTask(Task task) {
+        // Ownership is enforced in controller by loading the routine; still validate association exists here.
+        if (
+            task.getRoutine() == null ||
+            task.getRoutine().getRoutineId() == null
+        ) {
+            throw new IllegalArgumentException(
+                "Task must belong to a routine."
+            );
+        }
+
         // If client doesn't provide a position, place it at the end of the routine.
         if (task.getPosition() == null) {
-            Integer routineId =
-                task.getRoutine() != null
-                    ? task.getRoutine().getRoutineId()
-                    : null;
-
-            if (routineId != null) {
-                int nextPosition = getTasksByRoutineId(routineId).size();
-                task.setPosition(nextPosition);
-            } else {
-                task.setPosition(0);
-            }
+            Integer routineId = task.getRoutine().getRoutineId();
+            int nextPosition = getTasksByRoutineId(routineId).size();
+            task.setPosition(nextPosition);
         }
 
         return taskRepo.save(task);
@@ -89,31 +124,15 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
-        // Fetch tasks belonging to the routine (in any order), then validate membership
-        List<Task> tasksInRoutine =
-            taskRepo.findByRoutineRoutineIdOrderByPositionAscTaskIdAsc(
-                routineId
-            );
+        // Fetch tasks belonging to the routine, then validate membership.
+        // NOTE: This also performs an ownership check.
+        List<Task> tasksInRoutine = getTasksByRoutineId(routineId);
 
         if (tasksInRoutine.isEmpty()) {
             throw new EntityNotFoundException(
                 "No tasks found for routine id: " + routineId
             );
         }
-
-        // Ownership check: use the routine owner from any task (routine is the same for all tasks here)
-        Task anyTask = tasksInRoutine.get(0);
-        if (
-            anyTask.getRoutine() == null ||
-            anyTask.getRoutine().getUser() == null
-        ) {
-            throw new IllegalStateException(
-                "Task is missing routine/user association for authorization"
-            );
-        }
-        authService.verifyOwnershipOrAdmin(
-            anyTask.getRoutine().getUser().getUserId()
-        );
 
         Set<Integer> taskIdsInRoutine = new HashSet<>();
         for (Task t : tasksInRoutine) {
@@ -127,17 +146,26 @@ public class TaskServiceImpl implements TaskService {
             );
         }
 
+        // O(n): index tasks by id for fast lookup
+        Map<Integer, Task> byId = new HashMap<>();
+        for (Task t : tasksInRoutine) {
+            byId.put(t.getTaskId(), t);
+        }
+
         // Apply new positions
         for (int i = 0; i < orderedTaskIds.size(); i++) {
             Integer taskId = orderedTaskIds.get(i);
-
-            // Find the matching task (routine sets are typically small; keep it simple)
-            for (Task t : tasksInRoutine) {
-                if (t.getTaskId().equals(taskId)) {
-                    t.setPosition(i);
-                    break;
-                }
+            Task t = byId.get(taskId);
+            if (t == null) {
+                // Should be impossible because of the set equality check above, but keep it explicit.
+                throw new IllegalArgumentException(
+                    "Task id " +
+                        taskId +
+                        " does not belong to routine " +
+                        routineId
+                );
             }
+            t.setPosition(i);
         }
 
         taskRepo.saveAll(tasksInRoutine);

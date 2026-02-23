@@ -913,125 +913,133 @@ const Dashboard = () => {
         </div>
 
         {/* Manual Routine Management */}
-        <div className="dashboard-section">
-          <div className="routine-container">
-            <div className="input-container">
-              <h2>Your Routines</h2>
-              <input
-                name="routine-name"
-                type="text"
-                placeholder="Enter new routine"
-                value={newRoutine}
-                onChange={(e) => setNewRoutine(e.target.value)}
-                disabled={adding}
-              />
-              <button onClick={handleAddRoutine} disabled={adding}>
-                {adding ? "Adding..." : "Add Routine"}
-              </button>
-              {addError ? (
-                <div style={{ color: "crimson", marginTop: 8 }}>{addError}</div>
-              ) : null}
-              {deleteError ? (
-                <div style={{ color: "crimson", marginTop: 8 }}>
-                  {deleteError}
-                </div>
-              ) : null}
-              {editError ? (
-                <div style={{ color: "crimson", marginTop: 8 }}>
-                  {editError}
-                </div>
-              ) : null}
-            </div>
-            <div className="routines">
-              <ul>
-                {routines.map((routine, index) => (
-                  <li key={routine.routineId || index}>
-                    <div>
-                      <strong>
-                        {editingId === routine.routineId ? (
-                          <>
-                            <input
-                              name="edit-routine-name"
-                              type="text"
-                              value={editName}
-                              onChange={(e) => setEditName(e.target.value)}
-                              disabled={savingId === routine.routineId}
-                            />
-                            <button
-                              onClick={() => saveEditRoutine(routine.routineId)}
-                              disabled={savingId === routine.routineId}
-                            >
-                              {savingId === routine.routineId
-                                ? "Saving..."
-                                : "Save"}
-                            </button>
-                            <button
-                              onClick={cancelEditRoutine}
-                              disabled={savingId === routine.routineId}
-                            >
-                              Cancel
-                            </button>
-                          </>
+        {!activeRoutine ? (
+          <div className="dashboard-section">
+            <div className="routine-container">
+              <div className="input-container">
+                <h2>Your Routines</h2>
+                <input
+                  name="routine-name"
+                  type="text"
+                  placeholder="Enter new routine"
+                  value={newRoutine}
+                  onChange={(e) => setNewRoutine(e.target.value)}
+                  disabled={adding}
+                />
+                <button onClick={handleAddRoutine} disabled={adding}>
+                  {adding ? "Adding..." : "Add Routine"}
+                </button>
+                {addError ? (
+                  <div style={{ color: "crimson", marginTop: 8 }}>
+                    {addError}
+                  </div>
+                ) : null}
+                {deleteError ? (
+                  <div style={{ color: "crimson", marginTop: 8 }}>
+                    {deleteError}
+                  </div>
+                ) : null}
+                {editError ? (
+                  <div style={{ color: "crimson", marginTop: 8 }}>
+                    {editError}
+                  </div>
+                ) : null}
+              </div>
+              <div className="routines">
+                <ul>
+                  {routines.map((routine, index) => (
+                    <li key={routine.routineId || index}>
+                      <div>
+                        <strong>
+                          {editingId === routine.routineId ? (
+                            <>
+                              <input
+                                name="edit-routine-name"
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                                disabled={savingId === routine.routineId}
+                              />
+                              <button
+                                onClick={() =>
+                                  saveEditRoutine(routine.routineId)
+                                }
+                                disabled={savingId === routine.routineId}
+                              >
+                                {savingId === routine.routineId
+                                  ? "Saving..."
+                                  : "Save"}
+                              </button>
+                              <button
+                                onClick={cancelEditRoutine}
+                                disabled={savingId === routine.routineId}
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              {routine.name}
+                              {routine.__optimistic ? " (saving...)" : ""}
+                            </>
+                          )}
+                        </strong>
+                        <br />
+                        {routine.description == null ? (
+                          "No description"
                         ) : (
-                          <>
-                            {routine.name}
-                            {routine.__optimistic ? " (saving...)" : ""}
-                          </>
+                          <p>Description: {routine.description}</p>
                         )}
-                      </strong>
-                      <br />
-                      {routine.description == null ? (
-                        "No description"
-                      ) : (
-                        <p>Description: {routine.description}</p>
-                      )}
-                      <p>Detail Level: {routine.detailLevel}</p>
-                      <p>Status: {routine.isActive ? "Active" : "Inactive"}</p>
-                    </div>
+                        <p>Detail Level: {routine.detailLevel}</p>
+                        <p>
+                          Status: {routine.isActive ? "Active" : "Inactive"}
+                        </p>
+                      </div>
 
-                    <button
-                      onClick={() => setActiveRoutine(routine.routineId)}
-                      disabled={
-                        routine.__optimistic ||
-                        deletingId === routine.routineId ||
-                        savingId === routine.routineId ||
-                        editingId === routine.routineId ||
-                        routine.isActive
-                      }
-                    >
-                      {routine.isActive ? "Active" : "Set Active"}
-                    </button>
+                      <button
+                        onClick={() => setActiveRoutine(routine.routineId)}
+                        disabled={
+                          routine.__optimistic ||
+                          deletingId === routine.routineId ||
+                          savingId === routine.routineId ||
+                          editingId === routine.routineId ||
+                          routine.isActive
+                        }
+                      >
+                        {routine.isActive ? "Active" : "Set Active"}
+                      </button>
 
-                    <button
-                      onClick={() => startEditRoutine(routine)}
-                      disabled={
-                        routine.__optimistic ||
-                        deletingId === routine.routineId ||
-                        savingId === routine.routineId ||
-                        editingId === routine.routineId
-                      }
-                    >
-                      Edit
-                    </button>
+                      <button
+                        onClick={() => startEditRoutine(routine)}
+                        disabled={
+                          routine.__optimistic ||
+                          deletingId === routine.routineId ||
+                          savingId === routine.routineId ||
+                          editingId === routine.routineId
+                        }
+                      >
+                        Edit
+                      </button>
 
-                    <button
-                      onClick={() => handleDeleteRoutine(routine.routineId)}
-                      disabled={
-                        routine.__optimistic ||
-                        deletingId === routine.routineId ||
-                        savingId === routine.routineId
-                      }
-                    >
-                      {deletingId === routine.routineId
-                        ? "Deleting..."
-                        : "Delete"}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                      <button
+                        onClick={() => handleDeleteRoutine(routine.routineId)}
+                        disabled={
+                          routine.__optimistic ||
+                          deletingId === routine.routineId ||
+                          savingId === routine.routineId
+                        }
+                      >
+                        {deletingId === routine.routineId
+                          ? "Deleting..."
+                          : "Delete"}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );
