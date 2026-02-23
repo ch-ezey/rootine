@@ -4,9 +4,8 @@ import com.example.rootine_api.model.Routine;
 import com.example.rootine_api.repository.RoutineRepo;
 import com.example.rootine_api.security.AuthService;
 import jakarta.persistence.EntityNotFoundException;
-import java.util.List;
-
 import jakarta.transaction.Transactional;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,11 +31,19 @@ public class RoutineServiceImpl implements RoutineService {
 
     @Override
     public Routine getRoutineById(Integer id) {
-        return routineRepo
+        Routine routine = routineRepo
             .findById(id)
             .orElseThrow(() ->
                 new EntityNotFoundException("Routine not found with id: " + id)
             );
+
+        // Enforce multi-tenant access control on reads too (not just update/delete).
+        // This is important because task endpoints load routines before creating/listing tasks.
+        if (routine.getUser() != null) {
+            authService.verifyOwnershipOrAdmin(routine.getUser().getUserId());
+        }
+
+        return routine;
     }
 
     @Override

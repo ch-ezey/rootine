@@ -1,7 +1,7 @@
 import API from "./httpClient";
 
 export const getRoutines = async () => {
-  const res = await API.get("/routines");
+  const res = await API.get("/routine/routines");
   return res.data;
 };
 

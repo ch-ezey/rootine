@@ -4,18 +4,13 @@ import API from "./httpClient.js";
  * Backend controller base path: /task
  *
  * Available endpoints:
- * - GET    /task/tasks
  * - GET    /task/{id}
  * - GET    /task/routine/{routineId}
  * - POST   /task?routineId={routineId}
  * - PUT    /task/{id}
+ * - PUT    /task/routine/{routineId}/reorder
  * - DELETE /task/{id}
  */
-
-export const getTasks = async () => {
-  const res = await API.get("/task/tasks");
-  return res.data;
-};
 
 export const getTaskById = async (taskId) => {
   const res = await API.get(`/task/${taskId}`);
@@ -35,6 +30,19 @@ export const createTask = async ({ routineId, ...task }) => {
 export const updateTask = async (taskId, task) => {
   const res = await API.put(`/task/${taskId}`, task);
   return res.data;
+};
+
+/**
+ * Bulk reorder tasks within a routine.
+ *
+ * @param {number} routineId
+ * @param {number[]} orderedTaskIds - full ordered list of task ids belonging to the routine
+ */
+export const reorderTasks = async (routineId, orderedTaskIds) => {
+  const res = await API.put(`/task/routine/${routineId}/reorder`, {
+    orderedTaskIds,
+  });
+  return res.data; // backend returns 204; axios data will be undefined
 };
 
 export const deleteTask = async (taskId) => {

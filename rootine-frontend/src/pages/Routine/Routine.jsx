@@ -7,7 +7,7 @@ export default function Routine() {
   const [routine, setRoutine] = useState(null);
 
   useEffect(() => {
-    API.get(`/routines/${id}`).then((res) => setRoutine(res.data));
+    API.get(`/routine/${id}`).then((res) => setRoutine(res.data));
   }, [id]);
 
   if (!routine) return <p>Loading...</p>;

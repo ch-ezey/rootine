@@ -55,6 +55,13 @@ public class Task {
     @Column(name = "is_completed")
     private Boolean isCompleted = false;
 
+    /**
+     * Persistent ordering of tasks within a routine.
+     * Lower numbers appear first.
+     */
+    @Column(name = "position")
+    private Integer position;
+
     @Column(name = "created_at", columnDefinition = "TIMESTAMP(0)")
     @CreationTimestamp
     private LocalDateTime createdAt;
