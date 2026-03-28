@@ -1,181 +1,478 @@
-# 🧠 Smart Routine App API
+# Rootine API
 
-The **Smart Routine App API** is the backend for a dynamic routine and task management system. It allows users to create, customize, and manage routines, tasks, events, and templates—all tailored to their daily lifestyle and preferences.
+The `rootine-api` project is the backend service for Rootine’s current MVP: a routine management system with full CRUD support and AI-assisted routine generation from natural language prompts.
 
----
+This backend is focused on doing a smaller set of things well:
 
-## 🚀 Features
+- authenticate users
+- persist user-owned routines
+- persist ordered tasks within routines
+- support full CRUD for routines and tasks
+- provide AI-backed prompt flows for routine creation and updates
 
-- User registration and login
-- Create/edit/delete routines and tasks
-- Three supported task types: `routine`, `one-time`, `event`
-- Associate events with routines
-- Define task dependencies and add notes
-- Save and reuse routine templates
-- Device token storage for notifications
-- JSON-based routine settings
+The larger context-aware planning vision still exists, but this service is currently being shaped around a simpler and more achievable first product.
 
 ---
 
-## 🧱 Database Schema Overview
+## MVP Purpose
 
-> The backend uses **MySQL** with the following key tables:
+The purpose of this API is to support the following user promise:
 
-| Table             | Description                                 |
-|------------------|---------------------------------------------|
-| `user`           | Stores user credentials and metadata        |
-| `routine`        | User-defined routines with themes & detail  |
-| `task`           | Tasks (routine, one-time, event)            |
-| `task_note`      | Notes related to individual tasks           |
-| `task_dependency`| Dependencies between tasks                  |
-| `event`          | User-created time-based events              |
-| `routine_event`  | Maps events to specific routines            |
-| `routine_setting`| Custom JSON settings for routines           |
-| `template`       | Reusable blueprints for routine creation    |
-| `device_token`   | Device tokens for push notifications        |
+> Users can create, manage, and update structured routines manually or by describing what they want in plain language.
+
+That means this backend should prioritize:
+
+- reliability of CRUD operations
+- clean user ownership boundaries
+- predictable routine/task data structures
+- AI output that can be converted into editable structured data
+- backend behavior that is easy to reason about and debug
 
 ---
 
-## 🛠 Setup Instructions
+## Current Product Scope
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ch-ezey/rootine/tree/master/rootine-api
-   cd rootine-api
-   ```
+For this phase of Rootine, the backend is built around **routine management first**.
 
-2. **Set up the database**
-   ```bash
-   mysql -u root -p < schema.sql
-   ```
+### In scope
 
-3. **Configure environment variables**
-   Create a `.env` file:
-   ```env
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=yourpassword
-   DB_NAME=rootine
-   JWT_SECRET=supersecretkey
-   ```
+- user registration and login
+- routine CRUD
+- task CRUD within routines
+- ordered tasks inside a routine
+- routine activation state
+- AI prompt-based routine generation
+- AI prompt-based routine updates
 
-4. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt  # if using Python
-   # or
-   npm install  # if using Node.js
-   ```
+### Out of scope for now
 
-5. **Start the server**
-   ```bash
-   python app.py  # Flask/FastAPI
-   # or
-   npm start  # Express.js
-   ```
+- calendar-aware scheduling
+- event-driven replanning
+- commute-aware logic
+- dynamic daily orchestration
+- autonomous planning without user review
+- advanced preference learning
+- broader context ingestion beyond the current routine/task model
 
 ---
 
-## 📦 Template System
+## Current Technology Stack
 
-Templates help users quickly spin up common routines with predefined tasks. A template contains:
+This backend currently uses:
 
-- Title & description
-- JSON configuration defining:
-    - Detail level
-    - List of tasks with metadata
+- Java 17
+- Spring Boot 3.4.x
+- Spring Web
+- Spring Security
+- Spring Data JPA
+- Spring Validation
+- Spring WebSocket
+- MySQL
+- JWT via `jjwt`
+- OpenAI Java client via `com.openai:openai-java`
+- Maven
 
-Example `config_json` from the `template` table:
-```json
-{
-  "detail_level": "medium",
-  "tasks": [
-    {
-      "title": "Morning stretch",
-      "type": "routine",
-      "start_time": "07:00:00",
-      "duration": 10,
-      "priority": "medium"
-    },
-    {
-      "title": "Eat breakfast",
-      "type": "routine",
-      "start_time": "07:15:00",
-      "duration": 20
-    }
-  ]
-}
-```
-
-When a user uses a template:
-- A new routine is created
-- Tasks are populated based on the JSON config
-- The routine is assigned to the user
+This stack is appropriate for building a structured API with authentication, persistence, and AI-assisted workflow support.
 
 ---
 
-## 📚 Example API Endpoints
+## Current Domain Model
 
-| Method | Endpoint                    | Description                             |
-|--------|-----------------------------|-----------------------------------------|
-| POST   | `/auth/register`            | Register a new user                     |
-| POST   | `/auth/login`               | Authenticate user & return token        |
-| GET    | `/routines/:user_id`        | Retrieve all routines for a user        |
-| POST   | `/routine`                  | Create a new routine                    |
-| POST   | `/task`                     | Add a task to a routine                 |
-| GET    | `/templates`                | List available templates                |
-| POST   | `/template/:id/use`         | Use a template to generate a routine    |
+Based on the current backend structure, the API is centered around three primary persisted entities:
+
+- `User`
+- `Routine`
+- `Task`
+
+### `User`
+
+Represents the account owner.
+
+Current model fields include:
+
+- `user_id`
+- `uuid`
+- `name`
+- `email`
+- `password`
+- `created_at`
+- `last_login`
+
+### `Routine`
+
+Represents a user-owned routine.
+
+Current model fields include:
+
+- `routine_id`
+- `user`
+- `name`
+- `description`
+- `detailLevel`
+- `isActive`
+- `createdAt`
+- `tasks`
+
+A routine belongs to a user and owns a collection of tasks.
+
+### `Task`
+
+Represents a step inside a routine.
+
+Current model fields include:
+
+- `task_id`
+- `routine`
+- `title`
+- `description`
+- `taskType`
+- `startTime`
+- `duration`
+- `priority`
+- `isCompleted`
+- `position`
+- `createdAt`
+
+Tasks are ordered within a routine using the `position` field.
 
 ---
 
-## 🧠 Task Types
+## Database Schema
 
-Each task belongs to one of the following types:
+The current schema in `schema.sql` is centered around:
 
-- `routine`: Part of a recurring daily/weekly pattern
-- `one-time`: A task that only happens once
-- `event`: A scheduled, calendar-based occurrence (may also appear in `event` table)
+- `user`
+- `routine`
+- `task`
 
----
+### `user`
+Stores account and identity information.
 
-## 🔧 Routine Settings
+### `routine`
+Stores routine metadata and links each routine to a user.
 
-Each routine can have a customizable JSON-based config stored in the `routine_setting` table:
+Important fields include:
 
-Example:
-```json
-{
-  "show_progress": true,
-  "notifications": {
-    "enabled": true,
-    "reminder_minutes_before": 10
-  }
-}
-```
+- `user_id`
+- `name`
+- `description`
+- `detail_level`
+- `is_active`
 
----
+### `task`
+Stores routine steps and ordering information.
 
-## 📲 Device Tokens
+Important fields include:
 
-To enable push notifications or reminders, the `device_token` table stores:
+- `routine_id`
+- `title`
+- `description`
+- `type`
+- `start_time`
+- `duration`
+- `priority`
+- `is_completed`
+- `position`
 
-- User ID
-- Token string
-- Device type (e.g., iOS, Android)
-- Last used timestamp
-
----
-
-## 📌 Roadmap
-
-- Recurring logic & automatic rescheduling
-- Daily summary notifications
-- Task history and analytics
-- Drag-and-drop frontend routine builder
-- AI-generated routine suggestions
+This schema is a good fit for a structured routine CRUD MVP.
 
 ---
 
-## 📄 License
+## Current API Structure
 
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+Based on the current controller structure, the backend already supports a strong portion of the required MVP.
+
+### Authentication endpoints
+
+Under `/auth`, the API currently supports:
+
+- `POST /auth/login`
+- `POST /auth/register`
+- `GET /auth/me`
+
+These endpoints cover the basic authentication flow needed for a user-owned application.
+
+### Routine endpoints
+
+Under `/routine`, the API currently supports:
+
+- `GET /routine/routines`
+- `GET /routine/{id}`
+- `GET /routine/user/{userId}`
+- `POST /routine`
+- `POST /routine/{id}/activate`
+- `PUT /routine/{id}`
+- `DELETE /routine/{id}`
+
+These endpoints support core routine CRUD plus routine activation.
+
+### Task endpoints
+
+Under `/task`, the API currently supports:
+
+- `GET /task/{id}`
+- `GET /task/routine/{routineId}`
+- `POST /task`
+- `PUT /task/routine/{routineId}/reorder`
+- `PUT /task/{id}`
+- `DELETE /task/{id}`
+
+These endpoints support task CRUD and task ordering inside a routine.
+
+### AI endpoint
+
+Under `/openai`, the API currently includes:
+
+- `POST /openai/response`
+
+This endpoint appears to support prompt-driven AI generation and can serve as the basis for routine generation/update workflows.
+
+### User endpoints
+
+Under `/user`, the API currently includes endpoints for reading user information.
+
+This is useful for internal support and user lookup, though the MVP should remain primarily centered around authenticated user-owned routine management.
+
+---
+
+## MVP Backend Responsibilities
+
+For the current version of Rootine, this API should do the following well:
+
+### 1. Authentication and ownership
+Ensure users can securely create accounts, log in, and interact only with their own data where applicable.
+
+### 2. Routine CRUD
+Allow users to create, read, update, delete, and activate routines.
+
+### 3. Task CRUD
+Allow users to add, edit, remove, and reorder tasks within routines.
+
+### 4. Structured persistence
+Store routines and tasks in a way that remains editable and reliable after AI generation.
+
+### 5. AI-assisted routine workflows
+Accept prompts and return structured output that can become a routine draft or an update proposal.
+
+---
+
+## AI Workflow Direction
+
+The AI feature should remain constrained and practical.
+
+### Prompt-based routine creation
+
+Example user prompt:
+
+- "Create a weekday morning routine before work with stretching, breakfast, shower, and 10 minutes of planning."
+
+Expected backend responsibility:
+
+- accept the prompt
+- generate a structured response
+- return routine-like data the frontend can review
+- let the user decide whether to save it
+
+### Prompt-based routine update
+
+Example user prompt:
+
+- "Make this routine shorter and replace stretching with journaling."
+
+Expected backend responsibility:
+
+- accept the current routine context plus the prompt
+- generate a proposed structured update
+- return editable data to the frontend
+- avoid silently overwriting the saved routine without review
+
+### Important principle
+
+AI should help create or revise routines, but users should stay in control of what is persisted.
+
+---
+
+## Recommended API Direction
+
+The current API surface is already close to what this MVP needs. Near-term improvements should focus on making the AI contract more routine-specific.
+
+### Stable CRUD surface
+
+#### Auth
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
+
+#### Routines
+- `GET /routine/routines`
+- `GET /routine/{id}`
+- `GET /routine/user/{userId}`
+- `POST /routine`
+- `PUT /routine/{id}`
+- `DELETE /routine/{id}`
+- `POST /routine/{id}/activate`
+
+#### Tasks
+- `GET /task/{id}`
+- `GET /task/routine/{routineId}`
+- `POST /task`
+- `PUT /task/{id}`
+- `DELETE /task/{id}`
+- `PUT /task/routine/{routineId}/reorder`
+
+### AI evolution
+
+The current generic AI endpoint can later be refined into more explicit routine-focused endpoints such as:
+
+- `POST /ai/routines/generate`
+- `POST /ai/routines/{id}/update-from-prompt`
+
+Whether those endpoint names change or not, the key idea is that AI output should map cleanly into the existing `Routine` and `Task` model.
+
+---
+
+## Suggested Backend Flow
+
+A practical backend workflow for this MVP looks like this:
+
+### Manual creation flow
+1. User creates a routine.
+2. User adds tasks to the routine.
+3. User updates task ordering.
+4. User edits or deletes the routine over time.
+
+### AI creation flow
+1. User submits a natural language prompt.
+2. API generates a structured routine draft.
+3. Frontend shows draft to the user.
+4. User edits if needed.
+5. Frontend saves through normal routine/task persistence.
+
+### AI update flow
+1. User opens an existing routine.
+2. User submits a prompt describing changes.
+3. API returns a proposed updated structure.
+4. User reviews and edits the result.
+5. Frontend persists the final approved version.
+
+This keeps AI as an accelerator rather than an opaque source of truth.
+
+---
+
+## Key Files
+
+Important files in this backend project include:
+
+- `pom.xml` — Maven build configuration and dependencies
+- `schema.sql` — current MySQL schema
+- `Dockerfile` — container image definition
+- `docker-compose.yml` — local infrastructure support
+- `src/main/java/.../controller` — API controllers
+- `src/main/java/.../model` — JPA entities
+- `src/main/java/.../service` — business logic layer
+
+---
+
+## Local Development
+
+### Prerequisites
+
+You should have:
+
+- Java 17
+- Maven, or use the included Maven wrapper
+- MySQL
+- Docker, if you want to use the provided container setup
+
+### Environment configuration
+
+Configure the application using local Spring configuration and/or environment variables.
+
+Typical values include:
+
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `JWT_SECRET`
+- `OPENAI_API_KEY`
+
+Example values:
+
+- `SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/rootine`
+- `SPRING_DATASOURCE_USERNAME=root`
+- `SPRING_DATASOURCE_PASSWORD=yourpassword`
+- `JWT_SECRET=replace-with-a-secure-secret`
+- `OPENAI_API_KEY=your-api-key`
+
+If AI-backed functionality is enabled, an API key is required and should never be hardcoded in committed files.
+
+### Start local dependencies
+
+If your `docker-compose.yml` is configured for local development:
+
+- `docker compose up -d`
+
+### Run the API
+
+Using the Maven wrapper:
+
+- `./mvnw spring-boot:run`
+
+Or build then run:
+
+- `./mvnw clean package`
+- `java -jar target/*.jar`
+
+On Windows, you may prefer:
+
+- `mvnw.cmd spring-boot:run`
+
+---
+
+## Near-Term Development Priorities
+
+The most important backend work right now should be:
+
+1. make routine CRUD reliable
+2. make task CRUD and reordering reliable
+3. ensure user ownership and auth boundaries are correct
+4. shape AI output into structured routine/task payloads
+5. keep validation and persistence predictable
+6. avoid overcomplicating the MVP with broader planning logic
+
+If tradeoffs are needed, prioritize dependable CRUD and editable AI-assisted workflows over ambitious scheduling behavior.
+
+---
+
+## Long-Term Direction
+
+This backend is intentionally focused on a smaller MVP, but it can still serve as a foundation for a broader future product.
+
+If Rootine expands later, this service could evolve to support:
+
+- more types of user context
+- richer preferences and settings
+- event-aware routine adaptation
+- daily planning and replanning
+- broader life orchestration workflows
+
+That future should be built on top of a solid routine CRUD foundation, not instead of it.
+
+---
+
+## Development Philosophy
+
+A useful rule for this phase of the backend is:
+
+> Build reliable CRUD first, use AI to speed up routine creation and editing, and keep the user in control.
+
+That is the right constraint for the current stage of Rootine.
+
+---
+
+## Related Documentation
+
+- `../README.md` — top-level repository overview
+- `../rootine-frontend/README.md` — frontend application overview
+
+Use the root README for overall product direction and the frontend README for the UI-facing side of the MVP.
