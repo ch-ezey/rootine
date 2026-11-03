@@ -2,6 +2,7 @@ package com.example.rootine_api.config;
 
 import com.example.rootine_api.security.JwtAuthenticationFilter;
 import com.example.rootine_api.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,11 +29,14 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService customUserDetailsService;
+    private final List<String> allowedOrigins;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
-                          CustomUserDetailsService customUserDetailsService) {
+                          CustomUserDetailsService customUserDetailsService,
+                          @Value("${app.cors.allowed-origins}") List<String> allowedOrigins) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.customUserDetailsService = customUserDetailsService;
+        this.allowedOrigins = allowedOrigins;
     }
 
     @Bean
@@ -54,7 +58,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(allowedOrigins); // comma-separated CORS_ALLOWED_ORIGINS
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true); // important if you use cookies in the future

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/routine")
-@CrossOrigin
 public class RoutineController {
 
     @Autowired

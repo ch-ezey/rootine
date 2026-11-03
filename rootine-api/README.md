@@ -386,23 +386,18 @@ You should have:
 
 ### Environment configuration
 
-Configure the application using local Spring configuration and/or environment variables.
+Secrets and environment-specific settings are read from environment variables. For local work, copy `.env.example` to `.env` (gitignored) and fill it in; Spring Boot and `docker compose` both read it automatically.
 
-Typical values include:
+| Variable | Purpose |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | `dev` (default: schema auto-update, SQL logging) or `prod` (schema validation only, quiet logs) |
+| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | MySQL connection |
+| `JWT_SECRET` | Base64 signing key, at least 32 bytes (`openssl rand -base64 48`) |
+| `JWT_EXPIRATION_MS` | Token lifetime, default 24h |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins, default `http://localhost:5173` |
+| `OPENAI_API_KEY` | OpenAI key for AI routine generation |
 
-- `SPRING_DATASOURCE_URL`
-- `SPRING_DATASOURCE_USERNAME`
-- `SPRING_DATASOURCE_PASSWORD`
-- `JWT_SECRET`
-- `OPENAI_API_KEY`
-
-Example values:
-
-- `SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/rootine`
-- `SPRING_DATASOURCE_USERNAME=root`
-- `SPRING_DATASOURCE_PASSWORD=yourpassword`
-- `JWT_SECRET=replace-with-a-secure-secret`
-- `OPENAI_API_KEY=your-api-key`
+The app refuses to start without `DB_PASSWORD` and `JWT_SECRET`. In production, set these as platform environment variables rather than shipping a `.env` file.
 
 If AI-backed functionality is enabled, an API key is required and should never be hardcoded in committed files.
 

@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const restoreSession = async () => {
       const token = localStorage.getItem("token");
-      console.log("Restoring session with token:", token);
 
       if (!token) {
         setLoading(false);

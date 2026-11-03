@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/openai")
-@CrossOrigin
 public class OpenAIController {
 
     @Autowired
