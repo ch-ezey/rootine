@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../app/contexts/auth.context.js";
-import { getUserById, updateUser } from "../../services/api/user.service.js";
+import { getMe, updateMe } from "../../services/api/user.service.js";
 import {
   createRoutine,
   deleteRoutine,
-  getRoutineByUserId,
+  activateRoutine,
+  getRoutines,
   updateRoutine,
 } from "../../services/api/routine.service.js";
 
@@ -77,7 +78,7 @@ export default function User() {
       setUserLoading(true);
       setUserError(null);
       try {
-        const fresh = await getUserById(user.id);
+        const fresh = await getMe();
         setUserRecord(fresh);
         setUserNameDraft((fresh?.name ?? "").toString());
       } catch (err) {
@@ -112,7 +113,7 @@ export default function User() {
       setRoutinesLoading(true);
       setRoutinesError(null);
       try {
-        const data = await getRoutineByUserId(user.id);
+        const data = await getRoutines();
         setRoutines(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error fetching routines:", err);
@@ -163,7 +164,7 @@ export default function User() {
     }));
 
     try {
-      const updated = await updateUser(user.id, { name });
+      const updated = await updateMe({ name });
       setUserRecord(updated);
       setUserNameDraft((updated?.name ?? name).toString());
       setEditingUser(false);
@@ -206,9 +207,8 @@ export default function User() {
     setNewRoutineName("");
 
     try {
-      // Backend binds routine.user from JWT principal; userId in body isn't required
-      // but the existing frontend helper sends it, so keep consistent.
-      const created = await createRoutine({ userId: user.id, name });
+      // Backend binds routine.user from the JWT principal
+      const created = await createRoutine({ name });
 
       setRoutines((prev) =>
         (prev || []).map((r) =>
@@ -347,16 +347,8 @@ export default function User() {
     );
 
     try {
-      // Deactivate any active routines other than the target
-      const toDeactivate = (previous || []).filter(
-        (r) => r.routineId !== routineId && r.isActive,
-      );
-
-      for (const r of toDeactivate) {
-        await updateRoutine(r.routineId, { isActive: false });
-      }
-
-      await updateRoutine(routineId, { isActive: true });
+      // Server deactivates any other active routine in the same transaction
+      await activateRoutine(routineId);
     } catch (err) {
       console.error("Error setting active routine:", err);
 
@@ -387,7 +379,7 @@ export default function User() {
 
   const displayName = userRecord?.name ?? user?.name ?? "(no name)";
   const displayEmail = userRecord?.email ?? user?.email ?? "(no email)";
-  const displayId = userRecord?.userId ?? user?.id ?? "(unknown)";
+  const displayId = userRecord?.id ?? user?.id ?? "(unknown)";
 
   return (
     <div className="container">

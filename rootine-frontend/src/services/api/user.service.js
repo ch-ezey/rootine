@@ -1,21 +1,17 @@
 import API from "./httpClient.js";
 
-export const getAllUsers = async () => {
-  const res = await API.get("/user/users");
+// The signed-in user's own account
+export const getMe = async () => {
+  const res = await API.get("/user/me");
   return res.data;
 };
 
-export const getUserById = async (id) => {
-  const res = await API.get(`/user/${id}`);
+export const updateMe = async (userUpdates) => {
+  const res = await API.put("/user/me", userUpdates);
   return res.data;
 };
 
-export const updateUser = async (id, userUpdates) => {
-  const res = await API.put(`/user/${id}`, userUpdates);
-  return res.data;
-};
-
-export const deleteUser = async (id) => {
-  const res = await API.delete(`/user/${id}`);
+export const deleteMe = async () => {
+  const res = await API.delete("/user/me");
   return res.data;
 };
