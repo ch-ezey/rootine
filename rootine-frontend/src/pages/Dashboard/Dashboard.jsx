@@ -4,7 +4,8 @@ import { AuthContext } from "../../app/contexts/auth.context.js";
 import {
   createRoutine,
   deleteRoutine,
-  getRoutineByUserId,
+  activateRoutine,
+  getRoutines,
   updateRoutine,
 } from "../../services/api/routine.service.js";
 import {
@@ -211,7 +212,7 @@ const Dashboard = () => {
 
       setFetching(true);
       try {
-        const routinesData = await getRoutineByUserId(user.id);
+        const routinesData = await getRoutines();
         setRoutines(routinesData);
         console.log("Fetched routines:", routinesData);
       } catch (err) {
@@ -412,9 +413,6 @@ const Dashboard = () => {
   const setActiveRoutine = async (routineId) => {
     if (!routineId) return;
 
-    // Find currently active routine (if any)
-    const currentActive = (routines || []).find((r) => r?.isActive) || null;
-
     // Optimistic UI: mark selected as active, others inactive
     const previousRoutines = routines;
     setRoutines((prev) =>
@@ -426,13 +424,8 @@ const Dashboard = () => {
     );
 
     try {
-      // Backend doesn't provide a single "set active" endpoint, so we:
-      // 1) deactivate previous active (if different)
-      // 2) activate selected
-      if (currentActive?.routineId && currentActive.routineId !== routineId) {
-        await updateRoutine(currentActive.routineId, { isActive: false });
-      }
-      await updateRoutine(routineId, { isActive: true });
+      // Server deactivates any other active routine in the same transaction
+      await activateRoutine(routineId);
     } catch (err) {
       console.error("Error setting active routine:", err);
       // Roll back on failure
