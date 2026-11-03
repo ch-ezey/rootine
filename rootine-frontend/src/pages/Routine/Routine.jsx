@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import API from "../../services/api/httpClient.js";
+import { getRoutine } from "../../services/api/routine.service.js";
 import {
   getTasksByRoutineId,
   reorderTasks,
@@ -9,14 +9,13 @@ import {
 
 /**
  * MVP Routine page:
- * - Fetch routine details
- * - Fetch tasks (ordered by backend: position asc, taskId asc)
+ * - Fetch routine details and its tasks in one request (ordered by backend: position asc, taskId asc)
  * - Allow moving tasks up/down (local reorder)
  * - Save ordering in one call via bulk reorder endpoint
  *
  * Notes about API shape (backend):
- * - GET  /routine/{id} returns Routine with fields: routineId, name, description, ...
- * - GET  /task/routine/{routineId} returns Task[] with fields: taskId, title, startTime, duration, priority, taskType, position...
+ * - GET  /routine/{id} returns { routineId, name, description, ..., tasks: Task[] }
+ *   Task fields: taskId, title, startTime, duration, priority, taskType, position...
  * - PUT  /task/routine/{routineId}/reorder body: { orderedTaskIds: number[] } returns 204
  */
 
@@ -43,48 +42,25 @@ export default function Routine() {
       setLoadingRoutine(true);
       setError(null);
       try {
-        const res = await API.get(`/routine/${routineId}`);
+        const data = await getRoutine(routineId);
         if (cancelled) return;
-        setRoutine(res.data);
+        setRoutine(data);
+        setTasks(Array.isArray(data?.tasks) ? data.tasks : []);
+        setReorderDirty(false);
       } catch (e) {
         if (cancelled) return;
         setError(
           e?.response?.data?.message ?? e?.message ?? "Failed to load routine.",
         );
       } finally {
-        if (!cancelled) setLoadingRoutine(false);
+        if (!cancelled) {
+          setLoadingRoutine(false);
+          setLoadingTasks(false);
+        }
       }
     };
 
     if (Number.isFinite(routineId)) loadRoutine();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [routineId]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadTasks = async () => {
-      setLoadingTasks(true);
-      setError(null);
-      try {
-        const data = await getTasksByRoutineId(routineId);
-        if (cancelled) return;
-        setTasks(Array.isArray(data) ? data : []);
-        setReorderDirty(false);
-      } catch (e) {
-        if (cancelled) return;
-        setError(
-          e?.response?.data?.message ?? e?.message ?? "Failed to load tasks.",
-        );
-      } finally {
-        if (!cancelled) setLoadingTasks(false);
-      }
-    };
-
-    if (Number.isFinite(routineId)) loadTasks();
 
     return () => {
       cancelled = true;

@@ -1,59 +1,43 @@
 package com.example.rootine_api.controller;
 
 import com.example.rootine_api.dto.ReorderTasksRequest;
-import com.example.rootine_api.model.Routine;
-import com.example.rootine_api.model.Task;
-import com.example.rootine_api.service.RoutineService;
+import com.example.rootine_api.dto.TaskRequest;
+import com.example.rootine_api.dto.TaskResponse;
+import com.example.rootine_api.dto.TaskUpdateRequest;
 import com.example.rootine_api.service.TaskService;
 import jakarta.validation.Valid;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/** Tasks in the authenticated user's routines. Other users' tasks respond 404. */
 @RestController
 @RequestMapping("/task")
-@CrossOrigin
 public class TaskController {
 
-    @Autowired
-    private TaskService taskService;
+    private final TaskService taskService;
 
-    @Autowired
-    private RoutineService routineService;
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Integer id) {
-        // Ownership is enforced in TaskService.getTaskById via update/delete paths;
-        // for read, we rely on the same ownership model by checking through routine fetch below.
-        Task task = taskService.getTaskById(id);
-        return ResponseEntity.ok(task);
+    public ResponseEntity<TaskResponse> getTask(@PathVariable Integer id) {
+        return ResponseEntity.ok(taskService.getTask(id));
     }
 
     @GetMapping("/routine/{routineId}")
-    public ResponseEntity<List<Task>> getTasksByRoutineId(
-        @PathVariable Integer routineId
-    ) {
-        // Enforce ownership by attempting to load the routine first.
-        // RoutineService.getRoutineById will succeed only for authorized users (via service-level checks if present).
-        routineService.getRoutineById(routineId);
-
-        List<Task> tasks = taskService.getTasksByRoutineId(routineId);
-        return ResponseEntity.ok(tasks);
+    public ResponseEntity<List<TaskResponse>> getTasksByRoutineId(@PathVariable Integer routineId) {
+        return ResponseEntity.ok(taskService.getTasksByRoutineId(routineId));
     }
 
     @PostMapping
-    public ResponseEntity<Task> addTask(
-        @RequestBody Task task,
-        @RequestParam Integer routineId
+    public ResponseEntity<TaskResponse> addTask(
+        @RequestParam Integer routineId,
+        @Valid @RequestBody TaskRequest request
     ) {
-        // Enforce ownership by loading routine; service layer should verify owner/admin.
-        Routine routine = routineService.getRoutineById(routineId);
-
-        task.setRoutine(routine);
-        Task savedTask = taskService.addTask(task);
-
-        return ResponseEntity.ok(savedTask);
+        return ResponseEntity.status(HttpStatus.CREATED).body(taskService.addTask(routineId, request));
     }
 
     /**
@@ -71,18 +55,16 @@ public class TaskController {
         @PathVariable Integer routineId,
         @Valid @RequestBody ReorderTasksRequest request
     ) {
-        // Ownership is enforced by the service method (and/or by routineService.getRoutineById on read paths).
         taskService.reorderTasks(routineId, request.getOrderedTaskIds());
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(
+    public ResponseEntity<TaskResponse> updateTask(
         @PathVariable Integer id,
-        @RequestBody Task task
+        @Valid @RequestBody TaskUpdateRequest request
     ) {
-        Task updatedTask = taskService.updateTask(id, task);
-        return ResponseEntity.ok(updatedTask);
+        return ResponseEntity.ok(taskService.updateTask(id, request));
     }
 
     @DeleteMapping("/{id}")

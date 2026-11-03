@@ -1,89 +1,57 @@
 package com.example.rootine_api.controller;
 
-import com.example.rootine_api.model.Routine;
-import com.example.rootine_api.model.Task;
-import com.example.rootine_api.model.User;
+import com.example.rootine_api.dto.RoutineDetailResponse;
+import com.example.rootine_api.dto.RoutineRequest;
+import com.example.rootine_api.dto.RoutineSummaryResponse;
+import com.example.rootine_api.dto.RoutineUpdateRequest;
 import com.example.rootine_api.service.RoutineService;
-import com.example.rootine_api.service.UserService;
-import java.security.Principal;
+import jakarta.validation.Valid;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/** Routines of the authenticated user. Other users' routines respond 404. */
 @RestController
 @RequestMapping("/routine")
-@CrossOrigin
 public class RoutineController {
 
-    @Autowired
-    private RoutineService routineService;
+    private final RoutineService routineService;
 
-    @Autowired
-    private UserService userService;
-
-    @GetMapping("/routines")
-    public ResponseEntity<List<Routine>> getAllRoutines() {
-        List<Routine> routines = routineService.getAllRoutines();
-        return ResponseEntity.ok(routines);
+    public RoutineController(RoutineService routineService) {
+        this.routineService = routineService;
     }
 
+    /** List view: routines without their tasks. */
+    @GetMapping
+    public ResponseEntity<List<RoutineSummaryResponse>> getMyRoutines() {
+        return ResponseEntity.ok(routineService.getMyRoutines());
+    }
+
+    /** Detail view: routine with its tasks in order. */
     @GetMapping("/{id}")
-    public ResponseEntity<Routine> getRoutineById(@PathVariable Integer id) {
-        Routine routine = routineService.getRoutineById(id);
-        return ResponseEntity.ok(routine);
+    public ResponseEntity<RoutineDetailResponse> getRoutine(@PathVariable Integer id) {
+        return ResponseEntity.ok(routineService.getRoutine(id));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Routine>> getRoutinesByUserId(
-        @PathVariable Integer userId
-    ) {
-        List<Routine> routines = routineService.getRoutinesByUserId(userId);
-        return ResponseEntity.ok(routines);
-    }
-
+    /** Create a routine, optionally with nested tasks. */
     @PostMapping
-    public ResponseEntity<Routine> addRoutine(
-        @RequestBody Routine routine,
-        Principal principal
-    ) {
-        User user = userService.getUserByEmail(principal.getName());
-
-        // Ensure the routine is owned by the authenticated user
-        routine.setUser(user);
-
-        // IMPORTANT (nested create):
-        // If the client sends tasks inline under the routine, those Task entities must have their
-        // `routine` back-reference set, otherwise JPA won't have a consistent association to persist.
-        if (routine.getTasks() != null) {
-            for (Task task : routine.getTasks()) {
-                if (task != null) {
-                    task.setRoutine(routine);
-                }
-            }
-        }
-
-        Routine savedRoutine = routineService.addRoutine(routine);
-
-        return ResponseEntity.ok(savedRoutine);
+    public ResponseEntity<RoutineDetailResponse> addRoutine(@Valid @RequestBody RoutineRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(routineService.addRoutine(request));
     }
 
+    /** Make this the user's only active routine. */
     @PostMapping("/{id}/activate")
-    public ResponseEntity<Routine> activateRoutine(@PathVariable Integer id) {
-        Routine updated = routineService.activateRoutine(id);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<RoutineSummaryResponse> activateRoutine(@PathVariable Integer id) {
+        return ResponseEntity.ok(routineService.activateRoutine(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Routine> updateRoutine(
+    public ResponseEntity<RoutineSummaryResponse> updateRoutine(
         @PathVariable Integer id,
-        @RequestBody Routine routineUpdates
+        @Valid @RequestBody RoutineUpdateRequest request
     ) {
-        Routine updatedRoutine = routineService.updateRoutine(
-            id,
-            routineUpdates
-        );
-        return ResponseEntity.ok(updatedRoutine);
+        return ResponseEntity.ok(routineService.updateRoutine(id, request));
     }
 
     @DeleteMapping("/{id}")

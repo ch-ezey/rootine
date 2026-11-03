@@ -1,25 +1,22 @@
 package com.example.rootine_api.service;
 
-import com.example.rootine_api.model.Task;
+import com.example.rootine_api.dto.TaskRequest;
+import com.example.rootine_api.dto.TaskResponse;
+import com.example.rootine_api.dto.TaskUpdateRequest;
 import java.util.List;
 
+/** All operations act on tasks in the current user's routines only. */
 public interface TaskService {
-    List<Task> getAllTasks();
-    Task getTaskById(Integer id);
-    Task addTask(Task task);
-    Task updateTask(Integer id, Task task);
+    TaskResponse getTask(Integer id);
+    List<TaskResponse> getTasksByRoutineId(Integer routineId);
+    TaskResponse addTask(Integer routineId, TaskRequest request);
+    TaskResponse updateTask(Integer id, TaskUpdateRequest request);
     void deleteTask(Integer id);
-    List<Task> getTasksByRoutineId(Integer routineId);
 
     /**
      * Bulk reorder tasks within a routine.
      * The first task id gets position 0, next gets 1, etc.
-     *
-     * Implementation should:
-     * - validate the routine exists
-     * - enforce ownership (owner/admin)
-     * - ensure all taskIds belong to the routine
-     * - update positions transactionally
+     * The ids must be exactly the routine's tasks.
      */
     void reorderTasks(Integer routineId, List<Integer> orderedTaskIds);
 }

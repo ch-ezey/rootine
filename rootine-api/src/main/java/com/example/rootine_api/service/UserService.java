@@ -1,22 +1,16 @@
 package com.example.rootine_api.service;
 
+import com.example.rootine_api.dto.RegisterRequest;
+import com.example.rootine_api.dto.UserUpdateRequest;
 import com.example.rootine_api.model.User;
 
-import java.util.List;
-import java.util.UUID;
-
 public interface UserService {
-    List<User> getAllUser();
-    User getUserById(Integer id);
-    User getUserByEmail(String email);
-    User getUserByUUID(UUID uuid);
+    User registerUser(RegisterRequest request);
 
-    void addUser(User user);
-    User updateUser(Integer id, User user);
-    void deleteUser(Integer id);
+    /** Operations on the authenticated user's own account. */
+    User getCurrentUser();
+    User updateCurrentUser(UserUpdateRequest request);
+    void deleteCurrentUser();
 
-    User registerUser(User registerRequest);
-
-    void updateLastLogin(Integer id);
-    void updateLastLogin(String email);
+    void updateLastLogin(Integer userId);
 }

@@ -1,15 +1,17 @@
 package com.example.rootine_api.service;
 
-import com.example.rootine_api.model.Routine;
-
+import com.example.rootine_api.dto.RoutineDetailResponse;
+import com.example.rootine_api.dto.RoutineRequest;
+import com.example.rootine_api.dto.RoutineSummaryResponse;
+import com.example.rootine_api.dto.RoutineUpdateRequest;
 import java.util.List;
 
+/** All operations act on the current user's routines only. */
 public interface RoutineService {
-    List<Routine> getAllRoutines();
-    Routine getRoutineById(Integer id);
-    List<Routine> getRoutinesByUserId(Integer userId);
-    Routine addRoutine(Routine routine);
-    Routine updateRoutine(Integer id, Routine routine);
+    List<RoutineSummaryResponse> getMyRoutines();
+    RoutineDetailResponse getRoutine(Integer id);
+    RoutineDetailResponse addRoutine(RoutineRequest request);
+    RoutineSummaryResponse updateRoutine(Integer id, RoutineUpdateRequest request);
     void deleteRoutine(Integer id);
-    Routine activateRoutine(Integer id);
+    RoutineSummaryResponse activateRoutine(Integer id);
 }
