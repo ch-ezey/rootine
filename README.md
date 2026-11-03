@@ -299,9 +299,8 @@ A clean near-term API surface would center around:
 - `GET /auth/me`
 
 ### Routines
-- `GET /routine/routines`
+- `GET /routine`
 - `GET /routine/{id}`
-- `GET /routine/user/{userId}`
 - `POST /routine`
 - `PUT /routine/{id}`
 - `DELETE /routine/{id}`
