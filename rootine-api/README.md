@@ -67,7 +67,7 @@ This backend currently uses:
 - Spring Data JPA
 - Spring Validation
 - Spring WebSocket
-- MySQL
+- PostgreSQL, with schema migrations managed by Flyway
 - JWT via `jjwt`
 - OpenAI Java client via `com.openai:openai-java`
 - Maven
@@ -139,13 +139,15 @@ Tasks are ordered within a routine using the `position` field.
 
 ## Database Schema
 
-The current schema in `schema.sql` is centered around:
+The schema is defined by Flyway migrations in `src/main/resources/db/migration` and applied automatically on startup. Hibernate only validates it (`ddl-auto=validate`), so every schema change needs a new `V<n>__description.sql` migration.
 
-- `user`
+Tables:
+
+- `users`
 - `routine`
 - `task`
 
-### `user`
+### `users`
 Stores account and identity information.
 
 ### `routine`
@@ -157,7 +159,7 @@ Important fields include:
 - `name`
 - `description`
 - `detail_level`
-- `is_active`
+- `is_active` (a partial unique index allows at most one active routine per user)
 
 ### `task`
 Stores routine steps and ordering information.
@@ -196,15 +198,14 @@ These endpoints cover the basic authentication flow needed for a user-owned appl
 
 Under `/routine`, the API currently supports:
 
-- `GET /routine/routines`
-- `GET /routine/{id}`
-- `GET /routine/user/{userId}`
-- `POST /routine`
-- `POST /routine/{id}/activate`
-- `PUT /routine/{id}`
+- `GET /routine` — the current user's routines (without tasks)
+- `GET /routine/{id}` — one routine with its tasks, in order
+- `POST /routine` — create, optionally with nested `tasks`
+- `POST /routine/{id}/activate` — make it the user's only active routine
+- `PUT /routine/{id}` — partial update of name, description, detailLevel
 - `DELETE /routine/{id}`
 
-These endpoints support core routine CRUD plus routine activation.
+All routine and task endpoints only see the authenticated user's data; anything else responds `404`.
 
 ### Task endpoints
 
@@ -212,9 +213,9 @@ Under `/task`, the API currently supports:
 
 - `GET /task/{id}`
 - `GET /task/routine/{routineId}`
-- `POST /task`
-- `PUT /task/routine/{routineId}/reorder`
-- `PUT /task/{id}`
+- `POST /task?routineId={id}` — appended to the end unless `position` is given
+- `PUT /task/routine/{routineId}/reorder` — body `{ "orderedTaskIds": [...] }`
+- `PUT /task/{id}` — partial update
 - `DELETE /task/{id}`
 
 These endpoints support task CRUD and task ordering inside a routine.
@@ -229,9 +230,7 @@ This endpoint appears to support prompt-driven AI generation and can serve as th
 
 ### User endpoints
 
-Under `/user`, the API currently includes endpoints for reading user information.
-
-This is useful for internal support and user lookup, though the MVP should remain primarily centered around authenticated user-owned routine management.
+Under `/user/me`, the authenticated user can read (`GET`), rename (`PUT`) and delete (`DELETE`) their own account. Other users' accounts are not exposed.
 
 ---
 
@@ -304,9 +303,8 @@ The current API surface is already close to what this MVP needs. Near-term impro
 - `GET /auth/me`
 
 #### Routines
-- `GET /routine/routines`
+- `GET /routine`
 - `GET /routine/{id}`
-- `GET /routine/user/{userId}`
 - `POST /routine`
 - `PUT /routine/{id}`
 - `DELETE /routine/{id}`
@@ -364,7 +362,8 @@ This keeps AI as an accelerator rather than an opaque source of truth.
 Important files in this backend project include:
 
 - `pom.xml` — Maven build configuration and dependencies
-- `schema.sql` — current MySQL schema
+- `src/main/resources/db/migration` — Flyway schema migrations (PostgreSQL)
+- `docs/draft-schema-mysql.sql` — earlier draft schema with ideas for future tables (not applied)
 - `Dockerfile` — container image definition
 - `docker-compose.yml` — local infrastructure support
 - `src/main/java/.../controller` — API controllers
@@ -381,7 +380,7 @@ You should have:
 
 - Java 17
 - Maven, or use the included Maven wrapper
-- MySQL
+- PostgreSQL (or Docker, to run it via `docker compose up -d db`)
 - Docker, if you want to use the provided container setup
 
 ### Environment configuration
@@ -391,7 +390,7 @@ Secrets and environment-specific settings are read from environment variables. F
 | Variable | Purpose |
 | --- | --- |
 | `SPRING_PROFILES_ACTIVE` | `dev` (default: schema auto-update, SQL logging) or `prod` (schema validation only, quiet logs) |
-| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | MySQL connection |
+| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | PostgreSQL connection |
 | `JWT_SECRET` | Base64 signing key, at least 32 bytes (`openssl rand -base64 48`) |
 | `JWT_EXPIRATION_MS` | Token lifetime, default 24h |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins, default `http://localhost:5173` |
