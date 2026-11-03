@@ -13,7 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 @Setter
 @Getter
 @NoArgsConstructor
@@ -30,8 +30,7 @@ public class User implements UserDetails {
         name = "uuid",
         unique = true,
         updatable = false,
-        nullable = false,
-            columnDefinition = "BINARY(16)"
+        nullable = false
     )
     private UUID uuid = UUID.randomUUID(); // Automatically assigns a UUID when the object is created
 
@@ -41,6 +40,7 @@ public class User implements UserDetails {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @JsonIgnore
     @Column(name = "password", nullable = false)
     private String password;
 

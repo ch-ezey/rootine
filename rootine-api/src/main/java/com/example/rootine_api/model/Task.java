@@ -27,7 +27,7 @@ public class Task {
     @Column(name = "task_id")
     private Integer taskId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     @JoinColumn(name = "routine_id", nullable = false)
@@ -36,7 +36,7 @@ public class Task {
     @Column(name = "title", nullable = false, length = 150)
     private String title;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 1000)
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -62,7 +62,7 @@ public class Task {
     @Column(name = "position")
     private Integer position;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP(0)")
+    @Column(name = "created_at")
     @CreationTimestamp
     private LocalDateTime createdAt;
 }
