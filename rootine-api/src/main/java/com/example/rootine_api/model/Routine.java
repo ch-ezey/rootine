@@ -27,7 +27,7 @@ public class Routine {
     @Column(name = "routine_id")
     private Integer routineId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     @JoinColumn(name = "user_id")
@@ -36,7 +36,7 @@ public class Routine {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 1000)
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -64,6 +64,7 @@ public class Routine {
      * - cascade = ALL so tasks are persisted/updated when routine is saved.
      * - orphanRemoval = true so removed tasks are deleted.
      */
+    @OrderBy("position ASC, taskId ASC")
     @OneToMany(
         mappedBy = "routine",
         cascade = CascadeType.ALL,
