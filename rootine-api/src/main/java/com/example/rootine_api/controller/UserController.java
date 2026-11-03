@@ -1,60 +1,36 @@
 package com.example.rootine_api.controller;
 
-import com.example.rootine_api.model.User;
+import com.example.rootine_api.dto.UserResponse;
+import com.example.rootine_api.dto.UserUpdateRequest;
 import com.example.rootine_api.service.UserService;
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
-
+/** The authenticated user's own account. Other users' accounts are not exposed. */
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/user/me")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUser();
-        return ResponseEntity.ok(users);
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Integer id) {
-        User user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
+    @GetMapping
+    public ResponseEntity<UserResponse> getMe() {
+        return ResponseEntity.ok(UserResponse.from(userService.getCurrentUser()));
     }
 
-    @GetMapping("/uuid/{uuid}")
-    public ResponseEntity<User> getUserByUUID(@PathVariable UUID uuid) {
-        try {
-            User user = userService.getUserByUUID(uuid);
-            return ResponseEntity.ok(user);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+    @PutMapping
+    public ResponseEntity<UserResponse> updateMe(@Valid @RequestBody UserUpdateRequest request) {
+        return ResponseEntity.ok(UserResponse.from(userService.updateCurrentUser(request)));
     }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
-        User user = userService.getUserByEmail(email);
-        return ResponseEntity.ok(user);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Integer id, @RequestBody User user) {
-        User updatedUser = userService.updateUser(id, user);
-        return ResponseEntity.ok(updatedUser);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Integer id) {
-        userService.deleteUser(id);
+    @DeleteMapping
+    public ResponseEntity<Void> deleteMe() {
+        userService.deleteCurrentUser();
         return ResponseEntity.noContent().build();
     }
 }

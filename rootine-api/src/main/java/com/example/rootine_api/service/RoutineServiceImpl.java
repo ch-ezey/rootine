@@ -1,121 +1,129 @@
 package com.example.rootine_api.service;
 
+import com.example.rootine_api.dto.RoutineDetailResponse;
+import com.example.rootine_api.dto.RoutineRequest;
+import com.example.rootine_api.dto.RoutineSummaryResponse;
+import com.example.rootine_api.dto.RoutineUpdateRequest;
+import com.example.rootine_api.dto.TaskRequest;
 import com.example.rootine_api.model.Routine;
+import com.example.rootine_api.model.Task;
 import com.example.rootine_api.repository.RoutineRepo;
+import com.example.rootine_api.repository.UserRepo;
 import com.example.rootine_api.security.AuthService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RoutineServiceImpl implements RoutineService {
 
     private final RoutineRepo routineRepo;
+    private final UserRepo userRepo;
     private final AuthService authService;
 
     public RoutineServiceImpl(
         RoutineRepo routineRepo,
+        UserRepo userRepo,
         AuthService authService
     ) {
         this.routineRepo = routineRepo;
+        this.userRepo = userRepo;
         this.authService = authService;
     }
 
     // ─── Retrieval ───────────────────────────────────────────────────────────────────
 
     @Override
-    public List<Routine> getAllRoutines() {
-        return routineRepo.findAll();
+    @Transactional(readOnly = true)
+    public List<RoutineSummaryResponse> getMyRoutines() {
+        return routineRepo
+            .findByUserUserIdOrderByRoutineIdAsc(authService.getCurrentUserId())
+            .stream()
+            .map(RoutineSummaryResponse::from)
+            .toList();
     }
 
     @Override
-    public Routine getRoutineById(Integer id) {
+    @Transactional(readOnly = true)
+    public RoutineDetailResponse getRoutine(Integer id) {
         Routine routine = routineRepo
-            .findById(id)
-            .orElseThrow(() ->
-                new EntityNotFoundException("Routine not found with id: " + id)
-            );
-
-        // Enforce multi-tenant access control on reads too (not just update/delete).
-        // This is important because task endpoints load routines before creating/listing tasks.
-        if (routine.getUser() != null) {
-            authService.verifyOwnershipOrAdmin(routine.getUser().getUserId());
-        }
-
-        return routine;
-    }
-
-    @Override
-    public List<Routine> getRoutinesByUserId(Integer userId) {
-        return routineRepo.findByUserUserId(userId);
+            .findWithTasks(id, authService.getCurrentUserId())
+            .orElseThrow(() -> notFound(id));
+        return RoutineDetailResponse.from(routine);
     }
 
     // ─── Create ───────────────────────────────────────────────────────────────────
 
     @Override
-    public Routine addRoutine(Routine routine) {
-        return routineRepo.save(routine);
+    @Transactional
+    public RoutineDetailResponse addRoutine(RoutineRequest request) {
+        Routine routine = new Routine();
+        routine.setUser(userRepo.getReferenceById(authService.getCurrentUserId()));
+        routine.setName(request.name());
+        routine.setDescription(request.description());
+        if (request.detailLevel() != null) routine.setDetailLevel(request.detailLevel());
+
+        // Nested tasks keep the order they were sent in unless positions are given
+        if (request.tasks() != null) {
+            int nextPosition = 0;
+            for (TaskRequest taskRequest : request.tasks()) {
+                Task task = TaskServiceImpl.newTask(taskRequest, routine);
+                if (task.getPosition() == null) task.setPosition(nextPosition);
+                nextPosition = task.getPosition() + 1;
+                routine.getTasks().add(task);
+            }
+        }
+
+        return RoutineDetailResponse.from(routineRepo.save(routine));
     }
 
     // ─── Update ───────────────────────────────────────────────────────────────────
 
     @Override
-    public Routine updateRoutine(Integer id, Routine updates) {
-        Routine existingRoutine = getRoutineById(id);
+    @Transactional
+    public RoutineSummaryResponse updateRoutine(Integer id, RoutineUpdateRequest updates) {
+        Routine existing = findOwned(id);
 
-        authService.verifyOwnershipOrAdmin(
-            existingRoutine.getUser().getUserId()
-        );
+        if (updates.name() != null) existing.setName(updates.name());
+        if (updates.description() != null) existing.setDescription(updates.description());
+        if (updates.detailLevel() != null) existing.setDetailLevel(updates.detailLevel());
 
-        applyRoutineUpdates(existingRoutine, updates);
-
-        return routineRepo.save(existingRoutine);
+        return RoutineSummaryResponse.from(existing);
     }
 
     // ─── Delete ───────────────────────────────────────────────────────────────────
 
     @Override
+    @Transactional
     public void deleteRoutine(Integer id) {
-        Routine existingRoutine = getRoutineById(id);
-
-        authService.verifyOwnershipOrAdmin(
-            existingRoutine.getUser().getUserId()
-        );
-
-        routineRepo.delete(existingRoutine);
+        routineRepo.delete(findOwned(id));
     }
 
     // ─── Activate (Single-active enforcement) ───────────────────────────────────────
 
     @Override
     @Transactional
-    public Routine activateRoutine(Integer routineId) {
-        Routine target = getRoutineById(routineId);
+    public RoutineSummaryResponse activateRoutine(Integer id) {
+        Integer userId = authService.getCurrentUserId();
+        Routine target = findOwned(id);
 
-        Integer ownerUserId = target.getUser().getUserId();
-        authService.verifyOwnershipOrAdmin(ownerUserId);
-
-        // Step 1: deactivate any other active routines for this user
-        routineRepo.deactivateAllActiveForUser(ownerUserId);
-
-        // Step 2: activate the target routine
+        // Deactivate the others first: a partial unique index allows only one active routine per user
+        routineRepo.deactivateOthersForUser(userId, id);
         target.setIsActive(true);
-        return routineRepo.save(target);
+
+        return RoutineSummaryResponse.from(target);
     }
 
     // ─── Utility ───────────────────────────────────────────────────────────────────
 
-    private void applyRoutineUpdates(Routine existing, Routine updates) {
-        if (updates.getName() != null) existing.setName(updates.getName());
-        if (updates.getDetailLevel() != null) existing.setDetailLevel(
-            updates.getDetailLevel()
-        );
-        if (updates.getIsActive() != null) existing.setIsActive(
-            updates.getIsActive()
-        );
-        if (updates.getCreatedAt() != null) existing.setCreatedAt(
-            updates.getCreatedAt()
-        );
+    private Routine findOwned(Integer id) {
+        return routineRepo
+            .findByRoutineIdAndUserUserId(id, authService.getCurrentUserId())
+            .orElseThrow(() -> notFound(id));
+    }
+
+    private static EntityNotFoundException notFound(Integer id) {
+        return new EntityNotFoundException("Routine not found with id: " + id);
     }
 }

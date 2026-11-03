@@ -12,8 +12,13 @@ public class OpenAIController {
     @Autowired
     private OpenAIService openAIService;
 
+    private static final int MAX_PROMPT_LENGTH = 2000;
+
     @PostMapping("/response")
-    private ResponseEntity<String> getOpenAIResponse(@RequestBody String prompt){
+    public ResponseEntity<String> getOpenAIResponse(@RequestBody String prompt){
+        if (prompt.isBlank() || prompt.length() > MAX_PROMPT_LENGTH) {
+            throw new IllegalArgumentException("Prompt must be 1-" + MAX_PROMPT_LENGTH + " characters");
+        }
         String response = openAIService.generateRoutine(prompt);
         return ResponseEntity.ok(response);
     }
