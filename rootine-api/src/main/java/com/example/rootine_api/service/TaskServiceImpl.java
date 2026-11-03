@@ -1,105 +1,85 @@
 package com.example.rootine_api.service;
 
+import com.example.rootine_api.dto.TaskRequest;
+import com.example.rootine_api.dto.TaskResponse;
+import com.example.rootine_api.dto.TaskUpdateRequest;
+import com.example.rootine_api.model.Routine;
 import com.example.rootine_api.model.Task;
+import com.example.rootine_api.repository.RoutineRepo;
 import com.example.rootine_api.repository.TaskRepo;
 import com.example.rootine_api.security.AuthService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.springframework.security.access.AccessDeniedException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepo taskRepo;
+    private final RoutineRepo routineRepo;
     private final AuthService authService;
 
-    public TaskServiceImpl(TaskRepo taskRepo, AuthService authService) {
+    public TaskServiceImpl(TaskRepo taskRepo, RoutineRepo routineRepo, AuthService authService) {
         this.taskRepo = taskRepo;
+        this.routineRepo = routineRepo;
         this.authService = authService;
     }
 
     // ─── Retrieval ───────────────────────────────────────────────────────────────
 
     @Override
-    public List<Task> getAllTasks() {
-        return taskRepo.findAll();
+    @Transactional(readOnly = true)
+    public TaskResponse getTask(Integer id) {
+        return TaskResponse.from(findOwned(id));
     }
 
     @Override
-    public Task getTaskById(Integer id) {
-        Task task = taskRepo
-            .findById(id)
-            .orElseThrow(() ->
-                new EntityNotFoundException("Task not found with id: " + id)
-            );
-
-        // Enforce ownership on reads too (prevents cross-tenant access)
-        if (task.getRoutine() == null || task.getRoutine().getUser() == null) {
-            throw new AccessDeniedException(
-                "Task is missing routine/user association."
-            );
-        }
-        authService.verifyOwnershipOrAdmin(
-            task.getRoutine().getUser().getUserId()
-        );
-
-        return task;
-    }
-
-    @Override
-    public List<Task> getTasksByRoutineId(Integer routineId) {
-        // stable ordering: position asc, then taskId asc
-        List<Task> tasks =
-            taskRepo.findByRoutineRoutineIdOrderByPositionAscTaskIdAsc(
-                routineId
-            );
-
-        // Enforce ownership on reads too
-        if (!tasks.isEmpty()) {
-            Task any = tasks.get(0);
-            if (
-                any.getRoutine() == null || any.getRoutine().getUser() == null
-            ) {
-                throw new AccessDeniedException(
-                    "Tasks are missing routine/user association."
-                );
-            }
-            authService.verifyOwnershipOrAdmin(
-                any.getRoutine().getUser().getUserId()
-            );
-        }
-
-        return tasks;
+    @Transactional(readOnly = true)
+    public List<TaskResponse> getTasksByRoutineId(Integer routineId) {
+        requireOwnedRoutine(routineId);
+        return taskRepo
+            .findByRoutineRoutineIdOrderByPositionAscTaskIdAsc(routineId)
+            .stream()
+            .map(TaskResponse::from)
+            .toList();
     }
 
     // ─── Create ────────────────────────────────────────────────────────
 
     @Override
-    public Task addTask(Task task) {
-        // Ownership is enforced in controller by loading the routine; still validate association exists here.
-        if (
-            task.getRoutine() == null ||
-            task.getRoutine().getRoutineId() == null
-        ) {
-            throw new IllegalArgumentException(
-                "Task must belong to a routine."
-            );
-        }
+    @Transactional
+    public TaskResponse addTask(Integer routineId, TaskRequest request) {
+        Routine routine = routineRepo
+            .findByRoutineIdAndUserUserId(routineId, authService.getCurrentUserId())
+            .orElseThrow(() -> routineNotFound(routineId));
 
-        // If client doesn't provide a position, place it at the end of the routine.
+        Task task = newTask(request, routine);
+        // Default to the end of the routine
         if (task.getPosition() == null) {
-            Integer routineId = task.getRoutine().getRoutineId();
-            int nextPosition = getTasksByRoutineId(routineId).size();
-            task.setPosition(nextPosition);
+            task.setPosition(taskRepo.findMaxPosition(routineId) + 1);
         }
 
-        return taskRepo.save(task);
+        return TaskResponse.from(taskRepo.save(task));
+    }
+
+    /** Builds an unsaved task from a request; enum fields fall back to the entity defaults. */
+    static Task newTask(TaskRequest request, Routine routine) {
+        Task task = new Task();
+        task.setRoutine(routine);
+        task.setTitle(request.title());
+        task.setDescription(request.description());
+        if (request.taskType() != null) task.setTaskType(request.taskType());
+        task.setStartTime(request.startTime());
+        task.setDuration(request.duration());
+        if (request.priority() != null) task.setPriority(request.priority());
+        task.setPosition(request.position());
+        return task;
     }
 
     // ─── Reorder (Bulk) ───────────────────────────────────────────────────────────
@@ -107,119 +87,73 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public void reorderTasks(Integer routineId, List<Integer> orderedTaskIds) {
-        if (routineId == null) {
-            throw new IllegalArgumentException("routineId is required");
-        }
-        if (orderedTaskIds == null || orderedTaskIds.isEmpty()) {
-            throw new IllegalArgumentException(
-                "orderedTaskIds cannot be empty"
-            );
-        }
+        requireOwnedRoutine(routineId);
 
         // Ensure there are no duplicates in the request (prevents conflicting positions)
         Set<Integer> unique = new HashSet<>(orderedTaskIds);
         if (unique.size() != orderedTaskIds.size()) {
-            throw new IllegalArgumentException(
-                "orderedTaskIds contains duplicates"
-            );
+            throw new IllegalArgumentException("orderedTaskIds contains duplicates");
         }
 
-        // Fetch tasks belonging to the routine, then validate membership.
-        // NOTE: This also performs an ownership check.
-        List<Task> tasksInRoutine = getTasksByRoutineId(routineId);
-
-        if (tasksInRoutine.isEmpty()) {
-            throw new EntityNotFoundException(
-                "No tasks found for routine id: " + routineId
-            );
-        }
-
-        Set<Integer> taskIdsInRoutine = new HashSet<>();
-        for (Task t : tasksInRoutine) {
-            taskIdsInRoutine.add(t.getTaskId());
-        }
+        Map<Integer, Task> byId = taskRepo
+            .findByRoutineRoutineIdOrderByPositionAscTaskIdAsc(routineId)
+            .stream()
+            .collect(Collectors.toMap(Task::getTaskId, Function.identity()));
 
         // Request must be a permutation of the routine's task ids
-        if (!taskIdsInRoutine.equals(unique)) {
+        if (!byId.keySet().equals(unique)) {
             throw new IllegalArgumentException(
                 "orderedTaskIds must include exactly the tasks that belong to the routine"
             );
         }
 
-        // O(n): index tasks by id for fast lookup
-        Map<Integer, Task> byId = new HashMap<>();
-        for (Task t : tasksInRoutine) {
-            byId.put(t.getTaskId(), t);
-        }
-
-        // Apply new positions
+        // Managed entities: changes are flushed on commit
         for (int i = 0; i < orderedTaskIds.size(); i++) {
-            Integer taskId = orderedTaskIds.get(i);
-            Task t = byId.get(taskId);
-            if (t == null) {
-                // Should be impossible because of the set equality check above, but keep it explicit.
-                throw new IllegalArgumentException(
-                    "Task id " +
-                        taskId +
-                        " does not belong to routine " +
-                        routineId
-                );
-            }
-            t.setPosition(i);
+            byId.get(orderedTaskIds.get(i)).setPosition(i);
         }
-
-        taskRepo.saveAll(tasksInRoutine);
     }
 
     // ─── Update ───────────────────────────────────────────────────────────────────
 
     @Override
-    public Task updateTask(Integer id, Task taskUpdates) {
-        Task existingTask = getTaskById(id);
+    @Transactional
+    public TaskResponse updateTask(Integer id, TaskUpdateRequest updates) {
+        Task existing = findOwned(id);
 
-        authService.verifyOwnershipOrAdmin(
-            existingTask.getRoutine().getUser().getUserId()
-        );
+        if (updates.title() != null) existing.setTitle(updates.title());
+        if (updates.description() != null) existing.setDescription(updates.description());
+        if (updates.taskType() != null) existing.setTaskType(updates.taskType());
+        if (updates.startTime() != null) existing.setStartTime(updates.startTime());
+        if (updates.duration() != null) existing.setDuration(updates.duration());
+        if (updates.priority() != null) existing.setPriority(updates.priority());
+        if (updates.isCompleted() != null) existing.setIsCompleted(updates.isCompleted());
 
-        applyTaskUpdates(existingTask, taskUpdates);
-
-        return taskRepo.save(existingTask);
+        return TaskResponse.from(existing);
     }
 
     // ─── Delete ───────────────────────────────────────────────────────────────────
 
     @Override
+    @Transactional
     public void deleteTask(Integer id) {
-        Task existingTask = getTaskById(id);
-
-        authService.verifyOwnershipOrAdmin(
-            existingTask.getRoutine().getUser().getUserId()
-        );
-
-        taskRepo.deleteById(id);
+        taskRepo.delete(findOwned(id));
     }
 
     // ─── Utility ───────────────────────────────────────────────────────────────────
 
-    public void applyTaskUpdates(Task existing, Task updates) {
-        if (updates.getTitle() != null) existing.setTitle(updates.getTitle());
-        if (updates.getTaskType() != null) existing.setTaskType(
-            updates.getTaskType()
-        );
-        if (updates.getStartTime() != null) existing.setStartTime(
-            updates.getStartTime()
-        );
-        if (updates.getDuration() != null) existing.setDuration(
-            updates.getDuration()
-        );
-        if (updates.getPriority() != null) existing.setPriority(
-            updates.getPriority()
-        );
-        if (updates.getIsCompleted() != null) existing.setIsCompleted(
-            updates.getIsCompleted()
-        );
-        if (updates.getPosition() != null) existing.setPosition(
-            updates.getPosition()
-        );
+    private Task findOwned(Integer id) {
+        return taskRepo
+            .findByTaskIdAndRoutineUserUserId(id, authService.getCurrentUserId())
+            .orElseThrow(() -> new EntityNotFoundException("Task not found with id: " + id));
+    }
+
+    private void requireOwnedRoutine(Integer routineId) {
+        if (!routineRepo.existsByRoutineIdAndUserUserId(routineId, authService.getCurrentUserId())) {
+            throw routineNotFound(routineId);
+        }
+    }
+
+    private static EntityNotFoundException routineNotFound(Integer routineId) {
+        return new EntityNotFoundException("Routine not found with id: " + routineId);
     }
 }
