@@ -7,6 +7,15 @@
         <meta name="description" content="Rootine helps you build structured daily routines, manually or from a plain-language description." />
         <meta name="theme-color" content="#0f766e" />
         <title>Rootine</title>
+        <script>
+            // Apply the saved theme before first paint to avoid a flash (keep in sync with src/app/theme)
+            (function () {
+                var pref = "system";
+                try { pref = localStorage.getItem("theme") || "system"; } catch (e) {}
+                var dark = pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+                document.documentElement.dataset.theme = dark ? "dark" : "light";
+            })();
+        </script>
     </head>
     <body>
         <div id="root"></div>

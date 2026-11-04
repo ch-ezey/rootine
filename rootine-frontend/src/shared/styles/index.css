@@ -74,32 +74,35 @@
   --ring: #14b8a6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #0d1211;
-    --surface: #141b19;
-    --surface-2: #1b2421;
-    --border: #26322f;
-    --text: #e7eeec;
-    --muted: #9db0ab;
-    --subtle: #6f817c;
+/*
+ * Dark palette. data-theme on <html> always holds the resolved theme ("light" or "dark"):
+ * an inline script in index.html sets it before first paint, and ThemeProvider keeps it
+ * in sync with the user's choice (System / Light / Dark) and OS changes.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d1211;
+  --surface: #141b19;
+  --surface-2: #1b2421;
+  --border: #26322f;
+  --text: #e7eeec;
+  --muted: #9db0ab;
+  --subtle: #6f817c;
 
-    --primary: #2dd4bf;
-    --primary-hover: #5eead4;
-    --primary-fg: #04201d;
-    --primary-soft: #12302c;
-    --primary-soft-fg: #7ce9da;
+  --primary: #2dd4bf;
+  --primary-hover: #5eead4;
+  --primary-fg: #04201d;
+  --primary-soft: #12302c;
+  --primary-soft-fg: #7ce9da;
 
-    --success: #4ade80;
-    --success-soft: #11291b;
-    --warning: #fbbf24;
-    --warning-soft: #2c2210;
-    --danger: #fb923c;
-    --danger-soft: #2f1a10;
-    --danger-fg: #2a1206;
-    --ring: #2dd4bf;
-  }
+  --success: #4ade80;
+  --success-soft: #11291b;
+  --warning: #fbbf24;
+  --warning-soft: #2c2210;
+  --danger: #fb923c;
+  --danger-soft: #2f1a10;
+  --danger-fg: #2a1206;
+  --ring: #2dd4bf;
 }
 
 @layer base {

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Check, GripVertical, ListChecks, Sparkles, SunMedium } from "lucide-react";
 import { Logo } from "../../shared/ui/Logo.jsx";
+import { ThemeToggleButton } from "../../shared/ui/ThemeSwitcher.jsx";
 import { cn } from "../../shared/lib/cn.js";
 
 const FEATURES = [
@@ -80,6 +81,7 @@ export default function LandingPage() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <Logo />
         <nav className="flex items-center gap-2">
+          <ThemeToggleButton />
           <Link to="/login" className="rounded-xl px-4 py-2 text-sm font-medium text-muted hover:text-text">
             Log in
           </Link>
