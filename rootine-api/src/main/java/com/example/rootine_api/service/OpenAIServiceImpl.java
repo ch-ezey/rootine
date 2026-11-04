@@ -5,13 +5,17 @@ import com.openai.models.ChatModel;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
 public class OpenAIServiceImpl implements OpenAIService {
 
-    private final OpenAIClient openAIClient;
+    // Absent when OPENAI_API_KEY isn't configured (see OpenAIConfig)
+    private final ObjectProvider<OpenAIClient> openAIClientProvider;
 
     /**
      * IMPORTANT:
@@ -63,6 +67,11 @@ public class OpenAIServiceImpl implements OpenAIService {
                 .addUserMessage(fullPrompt)
                 .model(ChatModel.GPT_5_MINI)
                 .build();
+
+        OpenAIClient openAIClient = openAIClientProvider.getIfAvailable();
+        if (openAIClient == null) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI features are not configured");
+        }
 
         ChatCompletion chatCompletion = openAIClient.chat().completions().create(params);
 
