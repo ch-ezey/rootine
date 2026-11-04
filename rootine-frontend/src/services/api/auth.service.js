@@ -1,20 +1,18 @@
-// src/services/auth.js
 import API from "./httpClient.js";
 
-// Login
+// Both return { token, user: { id, name, email, createdAt, lastLogin } }
 export const loginUser = async (email, password) => {
   const res = await API.post("/auth/login", { email, password });
-  return res.data; // expected { token, user }
+  return res.data;
 };
 
-// Register
 export const registerUser = async (name, email, password) => {
   const res = await API.post("/auth/register", { name, email, password });
-  return res.data; // expected { message, user? }
+  return res.data;
 };
 
-// Fetch current user (session restore)
+// Current user (session restore)
 export const fetchMe = async () => {
   const res = await API.get("/auth/me");
-  return res.data; // expected { id, email, name, lastLogin }
+  return res.data;
 };

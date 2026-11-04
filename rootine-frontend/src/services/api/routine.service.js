@@ -12,6 +12,7 @@ export const getRoutine = async (id) => {
   return res.data;
 };
 
+// Accepts nested `tasks` to create a routine and its tasks in one request
 export const createRoutine = async (routine) => {
   const res = await API.post("/routine", routine);
   return res.data;
@@ -28,7 +29,12 @@ export const activateRoutine = async (id) => {
   return res.data;
 };
 
-export const deleteRoutine = async (id) => {
-  const res = await API.delete(`/routine/${id}`);
+// Marks every task in the routine as not completed (start a fresh day)
+export const resetRoutine = async (id) => {
+  const res = await API.post(`/routine/${id}/reset`);
   return res.data;
+};
+
+export const deleteRoutine = async (id) => {
+  await API.delete(`/routine/${id}`);
 };
