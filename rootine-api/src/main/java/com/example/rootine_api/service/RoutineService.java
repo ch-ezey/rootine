@@ -14,4 +14,7 @@ public interface RoutineService {
     RoutineSummaryResponse updateRoutine(Integer id, RoutineUpdateRequest request);
     void deleteRoutine(Integer id);
     RoutineSummaryResponse activateRoutine(Integer id);
+
+    /** Unticks every task so the routine can be followed again (e.g. the next day). */
+    RoutineDetailResponse resetRoutine(Integer id);
 }

@@ -221,6 +221,40 @@ class ApiIntegrationTest {
     }
 
     @Test
+    void reset_unticksEveryTask_andIsOwnerOnly() throws Exception {
+        int routineId = createRoutine(alice, "Daily", "[{\"title\":\"A\"},{\"title\":\"B\"}]");
+        String detail = send(get("/routine/" + routineId), alice, null).andReturn().getResponse().getContentAsString();
+        for (int i = 0; i < 2; i++) {
+            int taskId = JsonPath.read(detail, "$.tasks[" + i + "].taskId");
+            send(put("/task/" + taskId), alice, "{\"isCompleted\":true}").andExpect(status().isOk());
+        }
+
+        send(post("/routine/" + routineId + "/reset"), bob, null).andExpect(status().isNotFound());
+        send(post("/routine/" + routineId + "/reset"), alice, null)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tasks[*].isCompleted", contains(false, false)));
+    }
+
+    @Test
+    void taskUpdate_clearFlags_removeTimeAndDuration() throws Exception {
+        int routineId = createRoutine(alice, "Timed", "[{\"title\":\"Run\",\"startTime\":\"07:00\",\"duration\":30}]");
+        int taskId = JsonPath.read(
+                send(get("/routine/" + routineId), alice, null).andReturn().getResponse().getContentAsString(),
+                "$.tasks[0].taskId");
+
+        // Omitted fields stay as they are
+        send(put("/task/" + taskId), alice, "{\"title\":\"Long run\"}")
+                .andExpect(jsonPath("$.startTime").value("07:00:00"))
+                .andExpect(jsonPath("$.duration").value(30));
+
+        send(put("/task/" + taskId), alice, "{\"clearStartTime\":true,\"clearDuration\":true}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Long run"))
+                .andExpect(jsonPath("$.startTime").doesNotExist())
+                .andExpect(jsonPath("$.duration").doesNotExist());
+    }
+
+    @Test
     void invalidTaskInput_returns400() throws Exception {
         int routineId = createRoutine(alice, "Study", null);
         send(post("/task?routineId=" + routineId), alice, "{\"title\":\"\",\"duration\":-5}")
