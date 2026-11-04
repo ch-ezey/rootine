@@ -12,10 +12,17 @@ export const formatTime = (time) => {
   return minutesToLabel(minutes);
 };
 
+const timeFormat = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" });
+
 export const minutesToLabel = (minutes) => {
   const date = new Date();
   date.setHours(Math.floor(minutes / 60) % 24, minutes % 60, 0, 0);
-  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  if (date.getHours() !== 0) return timeFormat.format(date);
+  // The midnight hour always reads "00" ("12:xx AM" on 12-hour clocks, "0:xx" on some 24-hour ones)
+  return timeFormat
+    .formatToParts(date)
+    .map((part) => (part.type === "hour" ? "00" : part.value))
+    .join("");
 };
 
 export const formatDuration = (minutes) => {
