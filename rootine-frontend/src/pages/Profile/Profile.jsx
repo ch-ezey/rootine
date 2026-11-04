@@ -9,6 +9,7 @@ import { Button } from "../../shared/ui/Button.jsx";
 import { Card, PageHeader } from "../../shared/ui/Card.jsx";
 import { ConfirmDialog } from "../../shared/ui/Dialog.jsx";
 import { Field, Input } from "../../shared/ui/Field.jsx";
+import { ThemeSwitcher } from "../../shared/ui/ThemeSwitcher.jsx";
 
 const formatDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString([], { year: "numeric", month: "long", day: "numeric" }) : "—";
@@ -81,6 +82,14 @@ export default function Profile() {
                 </Button>
               </div>
             </form>
+          </Card>
+
+          <Card className="p-6">
+            <h2 className="font-semibold">Appearance</h2>
+            <p className="mt-1 text-sm text-muted">
+              Choose a theme, or follow your device's setting. Saved on this device.
+            </p>
+            <ThemeSwitcher showLabels className="mt-4 flex w-full sm:w-auto" />
           </Card>
 
           <Card className="border-danger/30 p-6">

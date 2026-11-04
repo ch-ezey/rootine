@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import { CalendarCheck, LayoutList, LogOut, UserRound } from "lucide-react";
 import { useAuth } from "../contexts/auth.context.js";
 import { Logo } from "../../shared/ui/Logo.jsx";
+import { ThemeSwitcher, ThemeToggleButton } from "../../shared/ui/ThemeSwitcher.jsx";
 import { cn } from "../../shared/lib/cn.js";
 
 const NAV = [
@@ -59,6 +60,7 @@ export default function AppShell() {
             </NavLink>
           ))}
         </nav>
+        <ThemeSwitcher className="mx-3 flex" />
         <div className="m-3 flex items-center gap-3 rounded-xl border border-border p-3">
           <Avatar name={user?.name} />
           <div className="min-w-0 flex-1">
@@ -81,9 +83,12 @@ export default function AppShell() {
         <Link to="/today">
           <Logo />
         </Link>
-        <Link to="/profile" aria-label="Profile">
-          <Avatar name={user?.name} className="size-8 text-xs" />
-        </Link>
+        <div className="flex items-center gap-1">
+          <ThemeToggleButton />
+          <Link to="/profile" aria-label="Profile">
+            <Avatar name={user?.name} className="size-8 text-xs" />
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-4 pt-6 pb-28 sm:px-6 lg:px-10 lg:pt-10 lg:pb-12">

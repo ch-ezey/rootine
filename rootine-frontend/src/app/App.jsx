@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./providers/AuthProvider.jsx";
+import { ThemeProvider } from "./providers/ThemeProvider.jsx";
+import { useTheme } from "./contexts/theme.context.js";
 import { GuestRoute, ProtectedRoute } from "./router/ProtectedRoute.jsx";
 import AppShell from "./layout/AppShell.jsx";
 
@@ -24,6 +26,12 @@ const queryClient = new QueryClient({
   },
 });
 
+// Toasts follow the in-app theme choice, not just the OS setting
+function ThemedToaster() {
+  const { resolvedTheme } = useTheme();
+  return <Toaster position="bottom-right" theme={resolvedTheme} richColors closeButton toastOptions={{ className: "font-sans" }} />;
+}
+
 // Old URLs from the previous UI
 function LegacyRoutineRedirect() {
   const { id } = useParams();
@@ -32,29 +40,31 @@ function LegacyRoutineRedirect() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
-            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-            <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
+              <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+              <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
 
-            <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
-              <Route path="/today" element={<Today />} />
-              <Route path="/routines" element={<Routines />} />
-              <Route path="/routines/:id" element={<RoutineDetail />} />
-              <Route path="/profile" element={<Profile />} />
-            </Route>
+              <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+                <Route path="/today" element={<Today />} />
+                <Route path="/routines" element={<Routines />} />
+                <Route path="/routines/:id" element={<RoutineDetail />} />
+                <Route path="/profile" element={<Profile />} />
+              </Route>
 
-            <Route path="/dashboard" element={<Navigate to="/today" replace />} />
-            <Route path="/user" element={<Navigate to="/profile" replace />} />
-            <Route path="/routine/:id" element={<LegacyRoutineRedirect />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-        <Toaster position="bottom-right" theme="system" richColors closeButton toastOptions={{ className: "font-sans" }} />
-      </AuthProvider>
-    </QueryClientProvider>
+              <Route path="/dashboard" element={<Navigate to="/today" replace />} />
+              <Route path="/user" element={<Navigate to="/profile" replace />} />
+              <Route path="/routine/:id" element={<LegacyRoutineRedirect />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+          <ThemedToaster />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

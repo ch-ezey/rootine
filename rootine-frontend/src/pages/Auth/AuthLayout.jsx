@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { Logo } from "../../shared/ui/Logo.jsx";
+import { ThemeToggleButton } from "../../shared/ui/ThemeSwitcher.jsx";
 
 const POINTS = [
   "Describe a routine in plain words and get a structured draft",
@@ -12,9 +13,12 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
       <div className="flex flex-col px-6 py-8 sm:px-12">
-        <Link to="/" className="self-start">
-          <Logo />
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link to="/">
+            <Logo />
+          </Link>
+          <ThemeToggleButton />
+        </div>
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-12 animate-fade-in">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="mt-1.5 text-sm text-muted">{subtitle}</p>
