@@ -1,67 +1,92 @@
-import React, { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../../app/contexts/auth.context.js";
-import { loginUser, fetchMe } from "../../services/api/auth.service.js";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
+import { useAuth } from "../../app/contexts/auth.context.js";
+import { loginUser } from "../../services/api/auth.service.js";
+import { getErrorMessage } from "../../services/api/httpClient.js";
+import { Button } from "../../shared/ui/Button.jsx";
+import { Field, Input } from "../../shared/ui/Field.jsx";
+import AuthLayout from "./AuthLayout.jsx";
 
-const Login = () => {
+export function FormError({ message }) {
+  if (!message) return null;
+  return (
+    <div role="alert" className="flex items-start gap-2 rounded-xl bg-danger-soft px-3.5 py-3 text-sm text-danger">
+      <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+      {message}
+    </div>
+  );
+}
+
+export default function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const onLogin = async (email, password) => {
-    try {
-      const { token } = await loginUser(email, password);
-
-      // Save token
-      localStorage.setItem("token", token);
-
-      // Fetch user info
-      const userData = await fetchMe();
-
-      console.log("Login successful:", userData);
-
-      // Save session globally
-      login(userData, token);
-
-      // Redirect to dashboard
-      navigate("/dashboard");
-    } catch (err) {
-      alert("Login failed: " + err.message);
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email.trim() && password.trim()) {
-      onLogin(email, password);
+    setError(null);
+    setSubmitting(true);
+    try {
+      const { token, user } = await loginUser(email.trim(), password);
+      login(token, user);
+      navigate(location.state?.from ?? "/today", { replace: true });
+    } catch (err) {
+      setError(getErrorMessage(err, "Couldn't log you in. Please try again."));
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="login-page">
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Enter email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <input
-          type="password"
-          placeholder="Enter password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Login</button>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Log in to pick up your routines where you left off."
+      footer={
+        <>
+          New to Rootine?{" "}
+          <Link to="/register" className="font-medium text-primary hover:underline">
+            Create an account
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <FormError message={error} />
+        <Field label="Email">
+          {(p) => (
+            <Input
+              {...p}
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+          )}
+        </Field>
+        <Field label="Password">
+          {(p) => (
+            <Input
+              {...p}
+              type="password"
+              autoComplete="current-password"
+              placeholder="Your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          )}
+        </Field>
+        <Button type="submit" size="lg" className="w-full" loading={submitting} disabled={!email || !password}>
+          Log in
+        </Button>
       </form>
-      <p>
-        Don’t have an account? <Link to="/register">Register here</Link>
-      </p>
-    </div>
+    </AuthLayout>
   );
-};
-
-export default Login;
+}

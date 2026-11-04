@@ -46,6 +46,12 @@ public class RoutineController {
         return ResponseEntity.ok(routineService.activateRoutine(id));
     }
 
+    /** Untick every task in the routine (start a fresh day). */
+    @PostMapping("/{id}/reset")
+    public ResponseEntity<RoutineDetailResponse> resetRoutine(@PathVariable Integer id) {
+        return ResponseEntity.ok(routineService.resetRoutine(id));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<RoutineSummaryResponse> updateRoutine(
         @PathVariable Integer id,

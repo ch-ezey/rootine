@@ -12,6 +12,5 @@ export const updateMe = async (userUpdates) => {
 };
 
 export const deleteMe = async () => {
-  const res = await API.delete("/user/me");
-  return res.data;
+  await API.delete("/user/me");
 };

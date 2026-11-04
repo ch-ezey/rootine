@@ -7,7 +7,10 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.time.LocalTime;
 
-/** Partial update: null fields are left unchanged. Use the reorder endpoint to change positions. */
+/**
+ * Partial update: null fields are left unchanged. Use the reorder endpoint to change positions.
+ * Since null means "unchanged", clearing the optional time fields uses explicit flags.
+ */
 public record TaskUpdateRequest(
     @Size(max = 150) @Pattern(regexp = ".*\\S.*", message = "must not be blank") String title,
     @Size(max = 1000) String description,
@@ -15,5 +18,7 @@ public record TaskUpdateRequest(
     LocalTime startTime,
     @Positive Integer duration,
     Priority priority,
-    Boolean isCompleted
+    Boolean isCompleted,
+    Boolean clearStartTime,
+    Boolean clearDuration
 ) {}

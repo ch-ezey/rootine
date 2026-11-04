@@ -236,13 +236,33 @@ This structure keeps the app aligned with the current MVP rather than overfittin
 
 This frontend currently uses:
 
-- React
-- Vite
-- `react-router-dom`
-- `axios`
+- React + Vite
+- `react-router-dom` for routing
+- `axios` for HTTP, with `@tanstack/react-query` for caching, loading states and optimistic updates
+- Tailwind CSS v4, with light/dark design tokens defined in `src/shared/styles/index.css`
+- `@dnd-kit` for drag-and-drop (and keyboard) task reordering
+- `lucide-react` icons, `sonner` toasts, Inter font
 - ESLint
 
-This is a lightweight setup that fits a fast-moving CRUD MVP well.
+### Structure
+
+- `src/app/` — app entry, routes, auth provider, protected routes, app shell (sidebar / mobile tab bar)
+- `src/pages/` — `Landing`, `Auth` (login/register), `Today` (active routine timeline), `Routines` (list + create, including the AI draft flow), `Routine` (detail: task CRUD and reordering), `Profile`
+- `src/services/api/` — one module per API resource; `httpClient.js` attaches the JWT and logs out on 401
+- `src/services/queries.js` — React Query hooks used by the pages
+- `src/shared/ui/` — reusable components (Button, Field, Card, Dialog, task bits)
+- `src/shared/lib/` — small helpers (time formatting, class names, task types)
+
+### Pages
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Landing page |
+| `/login`, `/register` | Auth (registering signs you in) |
+| `/today` | Active routine: progress, "up next" and a timeline with a live "now" marker |
+| `/routines` | All routines; create one blank or from an AI draft you review before saving |
+| `/routines/:id` | Edit details, activate, add/edit/delete/complete and drag-reorder tasks, "New day" reset |
+| `/profile` | Name, account info, logout, delete account |
 
 ---
 

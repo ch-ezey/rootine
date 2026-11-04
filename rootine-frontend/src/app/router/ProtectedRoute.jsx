@@ -1,14 +1,22 @@
-import React, { useContext } from "react";
-import { Navigate } from "react-router-dom";
-import { AuthContext } from "../contexts/auth.context.js";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/auth.context.js";
+import { FullPageSpinner } from "../../shared/ui/FullPageSpinner.jsx";
 
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useContext(AuthContext);
+/** Signed-in area: sends visitors to login, remembering where they were going. */
+export function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
 
-  if (loading) return <p>Loading...</p>;
-  if (!user) return <Navigate to="/" replace />;
-
+  if (loading) return <FullPageSpinner />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   return children;
-};
+}
 
-export default ProtectedRoute;
+/** Login/register/landing: signed-in users go straight to the app. */
+export function GuestRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) return <FullPageSpinner />;
+  if (user) return <Navigate to="/today" replace />;
+  return children;
+}

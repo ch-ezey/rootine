@@ -1,16 +1,122 @@
-/* index.css */
+@import "@fontsource-variable/inter";
+@import "tailwindcss";
 
-/* Reset margins and box sizing */
-* {
-	margin: 0;
-	padding: 0;
-	box-sizing: border-box;
+/*
+ * Design tokens. Components use the semantic names (bg-surface, text-muted, ...)
+ * so light and dark mode are switched here in one place.
+ */
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-fg: var(--primary-soft-fg);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-fg: var(--danger-fg);
+  --color-ring: var(--ring);
+
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --shadow-pop: 0 10px 30px -10px rgb(15 23 42 / 0.25);
+
+  --animate-fade-in: fade-in 150ms ease-out;
+  --animate-pop-in: pop-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Base body styles */
-body {
-	font-family: Arial, Helvetica, sans-serif;
-	background: #f9f9f9;
-	color: #333;
-	min-height: 100vh;
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+:root {
+  color-scheme: light;
+  --bg: #f6f7f6;
+  --surface: #ffffff;
+  --surface-2: #f1f3f2;
+  --border: #e3e7e5;
+  --text: #16201d;
+  --muted: #5d6b67;
+  --subtle: #8a9692;
+
+  --primary: #0f766e;
+  --primary-hover: #0d645d;
+  --primary-fg: #ffffff;
+  --primary-soft: #e3f4f1;
+  --primary-soft-fg: #0b5e57;
+
+  --success: #15803d;
+  --success-soft: #e6f6ec;
+  --warning: #b45309;
+  --warning-soft: #fdf3e2;
+  --danger: #c2410c;
+  --danger-soft: #fdece4;
+  --danger-fg: #ffffff;
+  --ring: #14b8a6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0d1211;
+    --surface: #141b19;
+    --surface-2: #1b2421;
+    --border: #26322f;
+    --text: #e7eeec;
+    --muted: #9db0ab;
+    --subtle: #6f817c;
+
+    --primary: #2dd4bf;
+    --primary-hover: #5eead4;
+    --primary-fg: #04201d;
+    --primary-soft: #12302c;
+    --primary-soft-fg: #7ce9da;
+
+    --success: #4ade80;
+    --success-soft: #11291b;
+    --warning: #fbbf24;
+    --warning-soft: #2c2210;
+    --danger: #fb923c;
+    --danger-soft: #2f1a10;
+    --danger-fg: #2a1206;
+    --ring: #2dd4bf;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-bg text-text font-sans antialiased;
+    min-height: 100dvh;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  ::selection {
+    @apply bg-primary-soft text-primary-soft-fg;
+  }
 }

@@ -127,6 +127,8 @@ public class TaskServiceImpl implements TaskService {
         if (updates.duration() != null) existing.setDuration(updates.duration());
         if (updates.priority() != null) existing.setPriority(updates.priority());
         if (updates.isCompleted() != null) existing.setIsCompleted(updates.isCompleted());
+        if (Boolean.TRUE.equals(updates.clearStartTime())) existing.setStartTime(null);
+        if (Boolean.TRUE.equals(updates.clearDuration())) existing.setDuration(null);
 
         return TaskResponse.from(existing);
     }
