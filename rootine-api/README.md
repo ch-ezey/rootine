@@ -400,11 +400,23 @@ The app refuses to start without `DB_PASSWORD` and `JWT_SECRET`. In production, 
 
 If AI-backed functionality is enabled, an API key is required and should never be hardcoded in committed files.
 
-### Start local dependencies
+### Option A: run everything in Docker
 
-If your `docker-compose.yml` is configured for local development:
+The `Dockerfile` builds the API from source, so no local Java build is needed:
 
-- `docker compose up -d`
+- `docker compose up -d --build` starts PostgreSQL and the API (on port 8080); the API waits for the database to be healthy
+- `docker compose logs -f spring-app` follows the API logs
+- `docker compose down` stops both (data is kept in the `db-data` volume)
+
+Add `--build` again after code changes so the image is rebuilt.
+
+### Option B: database in Docker, API on your machine
+
+Better for day-to-day development (faster restarts, debugger):
+
+- `docker compose up -d db` starts only PostgreSQL in the background
+
+Use `-d` so the database isn't stopped by Ctrl+C in that terminal. Don't run Option A's `spring-app` at the same time as a local API: both use port 8080.
 
 ### Run the API
 
