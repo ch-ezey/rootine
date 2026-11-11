@@ -1,0 +1,10 @@
+# Keep the build context small and secrets out of the image
+target/
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+*.iml
+docs/
+*.md
